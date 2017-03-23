@@ -71,7 +71,7 @@
 <link href="/css/main.css?v=5.1.0" rel="stylesheet" type="text/css" />
 
 
-  <meta name="keywords" content="Hexo, NexT" />
+  <meta name="keywords" content="漏洞,原理," />
 
 
 
@@ -87,16 +87,18 @@
 
 
 
-<meta name="description" content="Printf格式化字符串漏洞0x010x02">
+<meta name="description" content="Printf格式化字符串漏洞0x01 格式化字符串格式化字符串漏洞是由于printf函数的缺陷而导致的攻击者可以读或者写任意内存而产生的。将会利用该漏洞实现linux下shell的执行。首先需要了解什么是格式化字符串。格式化字符串是通过一些特定的说明符对输入的参数的格式进行说明。12@requires_authorizationprintf(&quot;你的名字:%s 你的年龄:%d\n&quot;,&quot;张三&quot;,28)">
 <meta property="og:type" content="article">
-<meta property="og:title" content="格式化字符串—漏洞（一）">
+<meta property="og:title" content="格式化字符串漏洞（一）漏洞原理">
 <meta property="og:url" content="http://blog.jacksecurity.com/2017/03/22/格式化字符串—漏洞（一）/index.html">
 <meta property="og:site_name" content="silence">
-<meta property="og:description" content="Printf格式化字符串漏洞0x010x02">
-<meta property="og:updated_time" content="2017-03-22T09:11:22.470Z">
+<meta property="og:description" content="Printf格式化字符串漏洞0x01 格式化字符串格式化字符串漏洞是由于printf函数的缺陷而导致的攻击者可以读或者写任意内存而产生的。将会利用该漏洞实现linux下shell的执行。首先需要了解什么是格式化字符串。格式化字符串是通过一些特定的说明符对输入的参数的格式进行说明。12@requires_authorizationprintf(&quot;你的名字:%s 你的年龄:%d\n&quot;,&quot;张三&quot;,28)">
+<meta property="og:image" content="http://blog.jacksecurity.com/image/printf_stack.png">
+<meta property="og:updated_time" content="2017-03-23T01:46:05.000Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="格式化字符串—漏洞（一）">
-<meta name="twitter:description" content="Printf格式化字符串漏洞0x010x02">
+<meta name="twitter:title" content="格式化字符串漏洞（一）漏洞原理">
+<meta name="twitter:description" content="Printf格式化字符串漏洞0x01 格式化字符串格式化字符串漏洞是由于printf函数的缺陷而导致的攻击者可以读或者写任意内存而产生的。将会利用该漏洞实现linux下shell的执行。首先需要了解什么是格式化字符串。格式化字符串是通过一些特定的说明符对输入的参数的格式进行说明。12@requires_authorizationprintf(&quot;你的名字:%s 你的年龄:%d\n&quot;,&quot;张三&quot;,28)">
+<meta name="twitter:image" content="http://blog.jacksecurity.com/image/printf_stack.png">
 
 
 
@@ -130,7 +132,7 @@
 
 
 
-  <title> 格式化字符串—漏洞（一） | silence </title>
+  <title> 格式化字符串漏洞（一）漏洞原理 | silence </title>
 </head>
 
 <body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
@@ -197,6 +199,16 @@
               <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
             
             首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
           </a>
         </li>
       
@@ -270,7 +282,7 @@
             
             
               
-                格式化字符串—漏洞（一）
+                格式化字符串漏洞（一）漏洞原理
               
             
           </h1>
@@ -295,6 +307,28 @@
             
           </span>
 
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/漏洞/" itemprop="url" rel="index">
+                    <span itemprop="name">漏洞</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
           
 
           
@@ -321,7 +355,16 @@
       
 
       
-        <h1 id="Printf格式化字符串漏洞"><a href="#Printf格式化字符串漏洞" class="headerlink" title="Printf格式化字符串漏洞"></a>Printf格式化字符串漏洞</h1><h2 id="0x01"><a href="#0x01" class="headerlink" title="0x01"></a>0x01</h2><h2 id="0x02"><a href="#0x02" class="headerlink" title="0x02"></a>0x02</h2>
+        <h1 id="Printf格式化字符串漏洞"><a href="#Printf格式化字符串漏洞" class="headerlink" title="Printf格式化字符串漏洞"></a>Printf格式化字符串漏洞</h1><h2 id="0x01-格式化字符串"><a href="#0x01-格式化字符串" class="headerlink" title="0x01 格式化字符串"></a>0x01 格式化字符串</h2><p><font color="green" face="黑体">格式化字符串漏洞是由于printf函数的缺陷而导致的攻击者可以读或者写任意内存而产生的。将会利用该漏洞实现linux下shell的执行。</font><br>首先需要了解什么是格式化字符串。格式化字符串是通过一些特定的说明符对输入的参数的格式进行说明。<br><figure class="highlight c"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">@<span class="function">requires_authorization</span></div><div class="line"><span class="title">printf</span><span class="params">(<span class="string">"你的名字:%s 你的年龄:%d\n"</span>,<span class="string">"张三"</span>,<span class="number">28</span>)</span>;</div></pre></td></tr></table></figure></p>
+<p>输出结果为</p>
+<blockquote>
+<p>你的名字:张三 你的年龄:28<br>printf函数的第一个参数就是格式化字符串，参数可以包括字符串文本与格式化说明符。格式化说明符告诉程序参数应该怎样输出。说明符的前缀必须是%，每当遇到一个说明符，程序<br>便回寻找一个参数，并指定其输出格式。例如%s,便是指定第二个参数”张三”输出为字符串，%d指定第三个参数输出为十进制整数。常见的说明符包括：<br>%d - 十进制 - 输出十进制整数<br>%s - 字符串 - 从内存中读取字符串<br>%x - 十六进制 - 输出十六进制数<br>%c - 字符 - 输出字符<br>%p - 指针 - 指针地址<br>%n - 到目前为止所写的字符数</p>
+</blockquote>
+<p>除了printf之外，fprintf,sprintf,snprintf等函数也可能存在格式化字符串漏洞。<br><br>printf函数还有一个特性便是参数个数不固定，最少可以只有一个参数。上面提到程序每遇到一个格式化说明符便去寻找一个参数，从堆栈的角度来看，便是依次向下读取堆栈。原理如下图<br><img src="/image/printf_stack.png" alt="ShowImage"> </p>
+<h2 id="0x02-漏洞原理"><a href="#0x02-漏洞原理" class="headerlink" title="0x02 漏洞原理"></a>0x02 漏洞原理</h2><ul>
+<li>1.对接</li>
+</ul>
+
       
     </div>
 
@@ -348,27 +391,19 @@
 
     <footer class="post-footer">
       
+        <div class="post-tags">
+          
+            <a href="/tags/漏洞/" rel="tag"># 漏洞</a>
+          
+            <a href="/tags/原理/" rel="tag"># 原理</a>
+          
+        </div>
+      
 
       
         
       
 
-      
-        <div class="post-nav">
-          <div class="post-nav-next post-nav-item">
-            
-              <a href="/2017/03/22/hello-world/" rel="next" title="Hello World">
-                <i class="fa fa-chevron-left"></i> Hello World
-              </a>
-            
-          </div>
-
-          <span class="post-nav-divider"></span>
-
-          <div class="post-nav-prev post-nav-item">
-            
-          </div>
-        </div>
       
 
       
@@ -437,14 +472,32 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">2</span>
+                <span class="site-state-item-count">1</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
           
 
           
+            
+            
+            <div class="site-state-item site-state-categories">
+              
+                <span class="site-state-item-count">1</span>
+                <span class="site-state-item-name">分类</span>
+              
+            </div>
+          
 
+          
+            
+            
+            <div class="site-state-item site-state-tags">
+              <a href="/tags/index.html">
+                <span class="site-state-item-count">2</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
           
 
         </nav>
@@ -476,7 +529,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Printf格式化字符串漏洞"><span class="nav-number">1.</span> <span class="nav-text">Printf格式化字符串漏洞</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#0x01"><span class="nav-number">1.1.</span> <span class="nav-text">0x01</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#0x02"><span class="nav-number">1.2.</span> <span class="nav-text">0x02</span></a></li></ol></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Printf格式化字符串漏洞"><span class="nav-number">1.</span> <span class="nav-text">Printf格式化字符串漏洞</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#0x01-格式化字符串"><span class="nav-number">1.1.</span> <span class="nav-text">0x01 格式化字符串</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#0x02-漏洞原理"><span class="nav-number">1.2.</span> <span class="nav-text">0x02 漏洞原理</span></a></li></ol></li></ol></div>
             
 
           </div>
