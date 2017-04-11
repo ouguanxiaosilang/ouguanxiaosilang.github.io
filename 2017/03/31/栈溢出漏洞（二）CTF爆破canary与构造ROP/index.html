@@ -5,7 +5,7 @@
     <meta http-equiv="Content-Type" content="text/html" charset="UTF-8" >
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="generator" content="silence">
-    <title>silence - all archives : 2017</title>
+    <title>silence - 栈溢出漏洞（二）ZCTF-2017-login</title>
     <meta name="author" content="mara silence">
     <meta name="description" content="null">
     <link rel="icon" href="/assets/images/null">
@@ -101,66 +101,89 @@
 </nav>
             <div id="main">
                 
+<article class="post" itemscope itemType="http://schema.org/BlogPosting">
     
-<div id="archives" class="main-content-wrap">
-    <form id="filter-form" action="#">
-        <input name="date" type="text" class="form-control input--xlarge" placeholder="Search a date" autofocus="autofocus">
-    </form>
-    <h5 class="archive-result text-color-base text-xlarge"></h5>
-    <section class="boxes">
-        
-            
-            
-            
-                
-                
-                <div class="archive archive-year box" data-date="2017">
-                    <h4 class="archive-title">
-                        <a class="link-unstyled" href="/archives/2017">2017</a>
-                    </h4>
-            
-            
-                
-                <ul class="archive-posts archive-month" data-date="201703">
-                    <h5 class="archive-title">
-                        <a class="link-unstyled" href="/archives/2017/03">March</a>
-                    </h5>
-                
-            
-                <li class="archive-post archive-day" data-date="20170331">
-                    <a class="archive-post-title" href="http://blog.jacksecurity.com/2017/03/31/栈溢出漏洞（二）CTF爆破canary与构造ROP/">栈溢出漏洞（二）ZCTF-2017-login</a>
-                    <span class="archive-post-date"> - 31/03/2017</span>
-                </li>
-        
-            
-            
-            
-            
-                <li class="archive-post archive-day" data-date="20170328">
-                    <a class="archive-post-title" href="http://blog.jacksecurity.com/2017/03/28/栈溢出漏洞（一）shellcode/">栈溢出漏洞（一）shellcode</a>
-                    <span class="archive-post-date"> - 28/03/2017</span>
-                </li>
-        
-            
-            
-            
-            
-                <li class="archive-post archive-day" data-date="20170323">
-                    <a class="archive-post-title" href="http://blog.jacksecurity.com/2017/03/23/格式化字符串漏洞（二）漏洞利用/">格式化字符串漏洞（二）漏洞利用</a>
-                    <span class="archive-post-date"> - 23/03/2017</span>
-                </li>
-        
-            
-            
-            
-            
-                <li class="archive-post archive-day" data-date="20170322">
-                    <a class="archive-post-title" href="http://blog.jacksecurity.com/2017/03/22/格式化字符串—漏洞（一）/">格式化字符串漏洞（一）漏洞原理</a>
-                    <span class="archive-post-date"> - 22/03/2017</span>
-                </li>
-        
-    </section>
+        <div class="post-header main-content-wrap">
+    
+        <h1 class="post-title" itemprop="headline">栈溢出漏洞（二）ZCTF-2017-login</h1>
+    
+    
 </div>
+    
+    <div class="post-content markdown main-content-wrap" itemprop="articleBody">
+        <h1 id="爆破canary与构造ROP"><a href="#爆破canary与构造ROP" class="headerlink" title="爆破canary与构造ROP"></a>爆破canary与构造ROP</h1><p>canary:0xffffd51c<br>缓冲区:0xffffd4dc<br>缓冲区地址0x804A0a0<br>putchar got表为:0x804A030<br>2b是数值增加+<br>2c是输入,<br>2d是数值减-<br>2e是输出.<br>3C是地址减小&lt;<br>3e是地址增加&gt;<br>思路是首先修改putchar的got表，然后在堆里填入system地址<br>putchargot表中是0x080484d6<br>system函数地址为0xf7e4ce70</p>
+<p>#所以偏移110不变 偏移114-3 偏移115+163 偏移116-80</p>
+<p>#偏移109-16 偏移110-31 偏移111+74 偏移112-102</p>
+
+        
+            
+        
+    </div>
+    <div class="post-footer main-content-wrap">
+        
+            <div class="post-footer-tags">
+                <span class="text-color-light text-small">TAGGED IN</span><br/>
+                
+    <a class="tag tag--primary tag--small t-link" href="/tags/CTF/">CTF</a> <a class="tag tag--primary tag--small t-link" href="/tags/漏洞，linux/">漏洞，linux</a>
+
+            </div>
+        
+        <div class="post-actions-wrap">
+    <nav>
+        <ul class="post-actions post-action-nav">
+            <li class="post-action">
+                
+                    <a class="post-action-btn btn btn--disabled">
+                
+                    <i class="fa fa-angle-left"></i>
+                    <span class="hide-xs hide-sm text-small icon-ml">PREVIOUS</span>
+                </a>
+            </li>
+            <li class="post-action">
+                
+                    <a class="post-action-btn btn btn--default tooltip--top" href="/2017/03/28/栈溢出漏洞（一）shellcode/" data-tooltip="栈溢出漏洞（一）shellcode">
+                
+                    <span class="hide-xs hide-sm text-small icon-mr">NEXT</span>
+                    <i class="fa fa-angle-right"></i>
+                </a>
+            </li>
+        </ul>
+    </nav>
+    
+</div>
+
+
+        
+    </div>
+    <div class="post-bottom-bar">
+        <div class="post-actions-wrap">
+    <nav>
+        <ul class="post-actions post-action-nav">
+            <li class="post-action">
+                
+                    <a class="post-action-btn btn btn--disabled">
+                
+                    <i class="fa fa-angle-left"></i>
+                    <span class="hide-xs hide-sm text-small icon-ml">PREVIOUS</span>
+                </a>
+            </li>
+            <li class="post-action">
+                
+                    <a class="post-action-btn btn btn--default tooltip--top" href="/2017/03/28/栈溢出漏洞（一）shellcode/" data-tooltip="栈溢出漏洞（一）shellcode">
+                
+                    <span class="hide-xs hide-sm text-small icon-mr">NEXT</span>
+                    <i class="fa fa-angle-right"></i>
+                </a>
+            </li>
+        </ul>
+    </nav>
+    
+</div>
+
+
+    </div>
+</article>
+
 
 
                 <footer id="footer" class="main-content-wrap">
