@@ -1,117 +1,111 @@
-<!DOCTYPE html>
-<html>
-    
+
+ <!DOCTYPE HTML>
+<html lang="zh-Hans">
 <head>
-    <meta http-equiv="Content-Type" content="text/html" charset="UTF-8" >
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="generator" content="silence">
-    <title>silence - 栈溢出漏洞（一）shellcode</title>
+  <meta charset="UTF-8">
+  
+    <title>栈溢出漏洞（一）shellcode | silence</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1,user-scalable=no">
+    
     <meta name="author" content="mara silence">
-    <meta name="description" content="null">
-    <link rel="icon" href="/assets/images/null">
     
-    <!--STYLES-->
-    <link rel="stylesheet" href="/assets/css/font-awesome.css">
-    <link rel="stylesheet" href="/assets/css/jquery.fancybox.css">
-    <link rel="stylesheet" href="/assets/css/jquery.fancybox-thumbs.css">
-    <link rel="stylesheet" href="/assets/css/tranquilpeak.css">
-    <!--STYLES END-->
+
     
+    <meta name="description" content="栈溢出原理与shellcode编写">
+<meta property="og:type" content="article">
+<meta property="og:title" content="栈溢出漏洞（一）shellcode">
+<meta property="og:url" content="http://blog.jacksecurity.com/2017/03/28/栈溢出漏洞（一）shellcode/index.html">
+<meta property="og:site_name" content="silence">
+<meta property="og:description" content="栈溢出原理与shellcode编写">
+<meta property="og:image" content="http://blog.jacksecurity.com/image/stack_flow.png">
+<meta property="og:image" content="http://blog.jacksecurity.com/image/stack_attack_basic.jpg">
+<meta property="og:image" content="http://blog.jacksecurity.com/image/stack_attack_jmp.jpg">
+<meta property="og:image" content="http://blog.jacksecurity.com/image/stack_attack_jmp2.jpg">
+<meta property="og:updated_time" content="2017-03-31T13:02:51.980Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="栈溢出漏洞（一）shellcode">
+<meta name="twitter:description" content="栈溢出原理与shellcode编写">
+<meta name="twitter:image" content="http://blog.jacksecurity.com/image/stack_flow.png">
+
+    
+    <link rel="alternative" href="/atom.xml" title="silence" type="application/atom+xml">
+    
+    
+    <link rel="icon" href="/img/favicon.ico">
+    
+    
+    <link rel="apple-touch-icon" href="/img/jacman.jpg">
+    <link rel="apple-touch-icon-precomposed" href="/img/jacman.jpg">
+    
+    <link rel="stylesheet" href="/css/style.css">
 </head>
 
-    <body>
-        <div id="blog">
-            <header id="header">
-    <i id="btn-open-sidebar" class="fa fa-lg fa-bars "></i>
-    <h1 class="header-title">
-        <a class="header-title-link" href="http://blog.jacksecurity.com">silence</a>
-    </h1>
-    
-</header>
-            <nav id="sidebar">
-    
-    <ul class="sidebar-buttons">
-        
-            <li class="sidebar-button">
-                
-                    <a  class="sidebar-button-link" href="http://blog.jacksecurity.com/">
-                
-                    <i class="sidebar-button-icon fa fa-lg fa-home"></i>
-                    <span class="sidebar-button-desc hide-md">Home</span>
-                </a>
-            </li>
-        
-            <li class="sidebar-button">
-                
-                    <a  class="sidebar-button-link" href="http://blog.jacksecurity.com/all-categories">
-                
-                    <i class="sidebar-button-icon fa fa-lg fa-bookmark"></i>
-                    <span class="sidebar-button-desc hide-md">Categories</span>
-                </a>
-            </li>
-        
-            <li class="sidebar-button">
-                
-                    <a  class="sidebar-button-link" href="http://blog.jacksecurity.com/all-tags">
-                
-                    <i class="sidebar-button-icon fa fa-lg fa-tags"></i>
-                    <span class="sidebar-button-desc hide-md">Tags</span>
-                </a>
-            </li>
-        
-            <li class="sidebar-button">
-                
-                    <a  class="sidebar-button-link" href="http://blog.jacksecurity.com/all-archives">
-                
-                    <i class="sidebar-button-icon fa fa-lg fa-archive"></i>
-                    <span class="sidebar-button-desc hide-md">Archives</span>
-                </a>
-            </li>
-        
-            <li class="sidebar-button">
-                
-                    <a  class="sidebar-button-link" href="http://blog.jacksecurity.com/#about">
-                
-                    <i class="sidebar-button-icon fa fa-lg fa-question"></i>
-                    <span class="sidebar-button-desc hide-md">About me</span>
-                </a>
-            </li>
-        
-    </ul>
-    
-
-    <ul class="sidebar-icons">
-        
-    </ul>
-
-    <div class="links">
-        <span>Links</span>
-        <ul class="list">
-            
-                <li>
-                    
-                        <a href="http://hexo.io" target="_blank">
-                    
-                        <span class="sidebar-button-desc hide-md">Hexo</span>
-                    </a>
-                </li>
-            
-        </ul>
-    </div>
-</nav>
-            <div id="main">
-                
-<article class="post" itemscope itemType="http://schema.org/BlogPosting">
-    
-        <div class="post-header main-content-wrap">
-    
-        <h1 class="post-title" itemprop="headline">栈溢出漏洞（一）shellcode</h1>
-    
-    
+  <body>
+    <header>
+      
+<div>
+		
+			<div id="imglogo">
+				<a href="/"><img src="/img/logo.png" alt="silence" title="silence"/></a>
+			</div>
+			
+			<div id="textlogo">
+				<h1 class="site-name"><a href="/" title="silence">silence</a></h1>
+				<h2 class="blog-motto"></h2>
+			</div>
+			<div class="navbar"><a class="navbutton navmobile" href="#" title="Menu">
+			</a></div>
+			<nav class="animated">
+				<ul>
+					<ul>
+					 
+						<li><a href="/">Home</a></li>
+					
+						<li><a href="/archives">Archives</a></li>
+					
+						<li><a href="/about">About</a></li>
+					
+					<li>
+ 					
+					<form class="search" action="//google.com/search" method="get" accept-charset="utf-8">
+						<label>Search</label>
+						<input type="search" id="search" name="q" autocomplete="off" maxlength="20" placeholder="Search" />
+						<input type="hidden" name="q" value="site:blog.jacksecurity.com">
+					</form>
+					
+					</li>
+				</ul>
+			</nav>			
 </div>
+    </header>
+    <div id="container">
+      <div id="main" class="post" itemscope itemprop="blogPost">
+  
+	<article itemprop="articleBody"> 
+		<header class="article-info clearfix">
+  <h1 itemprop="name">
     
-    <div class="post-content markdown main-content-wrap" itemprop="articleBody">
-        <h1 id="栈溢出原理与shellcode编写"><a href="#栈溢出原理与shellcode编写" class="headerlink" title="栈溢出原理与shellcode编写"></a>栈溢出原理与shellcode编写</h1><a id="more"></a>
+      <a href="/2017/03/28/栈溢出漏洞（一）shellcode/" title="栈溢出漏洞（一）shellcode" itemprop="url">栈溢出漏洞（一）shellcode</a>
+  </h1>
+  <p class="article-author">By
+       
+		<a href="/about" title="mara silence" target="_blank" itemprop="author">mara silence</a>
+		
+  <p class="article-time">
+    <time datetime="2017-03-28T02:37:34.000Z" itemprop="datePublished"> Published 2017-03-28</time>
+    
+  </p>
+</header>
+	<div class="article-content">
+		
+		<div id="toc" class="toc-article">
+			<strong class="toc-title">Contents</strong>
+		
+			<ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#栈溢出原理与shellcode编写"><span class="toc-number">1.</span> <span class="toc-text">栈溢出原理与shellcode编写</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#0x01-栈溢出"><span class="toc-number">1.1.</span> <span class="toc-text">0x01 栈溢出</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#0x02-shellcode-编写"><span class="toc-number">1.2.</span> <span class="toc-text">0x02 shellcode 编写</span></a></li></ol></li></ol>
+		
+		</div>
+		
+		<h1 id="栈溢出原理与shellcode编写"><a href="#栈溢出原理与shellcode编写" class="headerlink" title="栈溢出原理与shellcode编写"></a>栈溢出原理与shellcode编写</h1><a id="more"></a>
 <h2 id="0x01-栈溢出"><a href="#0x01-栈溢出" class="headerlink" title="0x01 栈溢出"></a>0x01 栈溢出</h2><p>1.栈溢出基本原理</p>
 <p><font color="green" face="黑体">堆栈溢出漏洞产生的原因是程序开发者在数据读入，拷贝等操作时未校验长度<br>常常导致数据长度超过内存缓冲区，并覆盖其它内存区域。</font></p>
 <p>堆溢出与栈溢出的漏洞利用原理是不同的。通过栈溢出，攻击者可以覆盖函数返回地址，从而执行自己的shellcode。举一个缓冲区溢出的简单的例子。<br><figure class="highlight c"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">void</span> <span class="title">fun</span><span class="params">(<span class="keyword">unsigned</span> <span class="keyword">char</span> * data)</span></span></div><div class="line">&#123;</div><div class="line">    <span class="keyword">unsigned</span> <span class="keyword">char</span> buffer[BUF_LEN];</div><div class="line">    <span class="built_in">strcpy</span>((<span class="keyword">char</span>*)buffer,(<span class="keyword">char</span>*)data);</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
@@ -133,110 +127,378 @@
 <p>上面的反汇编代码为了避免出现字节0x00，出现0x00的部分使用初始化的ebx代替。</p>
 <p>3.自己书写shellcode<br>使用工具生成的shellcode和编译器生成的shellcode经常无法直接使用，为了应对各种各样的情况，在shellcode代码不长的情况下可以<br>自己编写shellcode。<br>linux系统下执行系统调用可以使用”int 0x80”语句。通过al传递调用号，指明要调用的系统函数，比如传递0x0b便执行sys_execve函数。<br>该函数有三个参数，分别通过ebx,ecx,edx传递。其中，ebx传递要执行的命令。ecx传递存放命令的数组地址，edx传递执行文件的新环境变量<br>数组地址，可以直接置为0。根据这些条件可以直接书写汇编代码，执行”/bin/sh”<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line">xor eax , eax ; 清空eax</div><div class="line">push eax ;  将0x00放入堆栈</div><div class="line">push 0x3b68732f;    将&quot;/sh;&quot;压入栈</div><div class="line">push 0x6e69622f;    将&quot;/bin&quot;压入栈</div><div class="line">mov ebx,esp;    第一个参数，也就是字符串&quot;/bin/sh;&quot;的地址</div><div class="line">push ebx;</div><div class="line">mov ecx,esp;    第二个参数，即指向存放字符串&quot;/bin/sh;&quot;的内存</div><div class="line">xor edx,edx;    清空edx，作为第三个参数</div><div class="line">mov al,0x0b;    传递系统调用号    </div><div class="line">int 0x80</div></pre></td></tr></table></figure></p>
 <p>通过以上shellcode可以执行linux的shell脚本。</p>
+  
+	</div>
+		<footer class="article-footer clearfix">
+<div class="article-catetags">
 
-        
-            
-        
-    </div>
-    <div class="post-footer main-content-wrap">
-        
-            <div class="post-footer-tags">
-                <span class="text-color-light text-small">TAGGED IN</span><br/>
-                
-    <a class="tag tag--primary tag--small t-link" href="/tags/shellcode/">shellcode</a> <a class="tag tag--primary tag--small t-link" href="/tags/栈溢出/">栈溢出</a> <a class="tag tag--primary tag--small t-link" href="/tags/漏洞/">漏洞</a>
-
-            </div>
-        
-        <div class="post-actions-wrap">
-    <nav>
-        <ul class="post-actions post-action-nav">
-            <li class="post-action">
-                
-                    <a class="post-action-btn btn btn--default tooltip--top" href="/2017/03/31/栈溢出漏洞（二）CTF爆破canary与构造ROP/"  data-tooltip="栈溢出漏洞（二）ZCTF-2017-login">
-                
-                    <i class="fa fa-angle-left"></i>
-                    <span class="hide-xs hide-sm text-small icon-ml">PREVIOUS</span>
-                </a>
-            </li>
-            <li class="post-action">
-                
-                    <a class="post-action-btn btn btn--default tooltip--top" href="/2017/03/23/格式化字符串漏洞（二）漏洞利用/" data-tooltip="格式化字符串漏洞（二）漏洞利用">
-                
-                    <span class="hide-xs hide-sm text-small icon-mr">NEXT</span>
-                    <i class="fa fa-angle-right"></i>
-                </a>
-            </li>
-        </ul>
-    </nav>
-    
+<div class="article-categories">
+  <span></span>
+  <a class="article-category-link" href="/categories/漏洞/">漏洞</a>
 </div>
 
 
-        
-    </div>
-    <div class="post-bottom-bar">
-        <div class="post-actions-wrap">
-    <nav>
-        <ul class="post-actions post-action-nav">
-            <li class="post-action">
-                
-                    <a class="post-action-btn btn btn--default tooltip--top" href="/2017/03/31/栈溢出漏洞（二）CTF爆破canary与构造ROP/"  data-tooltip="栈溢出漏洞（二）ZCTF-2017-login">
-                
-                    <i class="fa fa-angle-left"></i>
-                    <span class="hide-xs hide-sm text-small icon-ml">PREVIOUS</span>
-                </a>
-            </li>
-            <li class="post-action">
-                
-                    <a class="post-action-btn btn btn--default tooltip--top" href="/2017/03/23/格式化字符串漏洞（二）漏洞利用/" data-tooltip="格式化字符串漏洞（二）漏洞利用">
-                
-                    <span class="hide-xs hide-sm text-small icon-mr">NEXT</span>
-                    <i class="fa fa-angle-right"></i>
-                </a>
-            </li>
-        </ul>
-    </nav>
-    
+  <div class="article-tags">
+  
+  <span></span> <a href="/tags/漏洞/">漏洞</a><a href="/tags/shellcode/">shellcode</a><a href="/tags/栈溢出/">栈溢出</a>
+  </div>
+
 </div>
 
 
-    </div>
-</article>
+
+	<div class="article-share" id="share">
+	
+	  <div data-url="http://blog.jacksecurity.com/2017/03/28/栈溢出漏洞（一）shellcode/" data-title="栈溢出漏洞（一）shellcode | silence" data-tsina="null" class="share clearfix">
+	  </div>
+	
+	</div>
 
 
-
-                <footer id="footer" class="main-content-wrap">
-    <div class="copyrights">
-        Copyrights &copy; 2017 mara silence. All Rights Reserved.
-        
-    </div>
-    <div class="copyrights">
-    	Powered by <a href="http://hexo.io/" target="_blank" rel="nofollow">Hexo</a>  
-    </div>
 </footer>
 
-            </div>
-        </div>
-        <div id="about">
-    <div id="about-card">
-        <div id="about-btn-close">
-            <i class="fa fa-remove"></i>
-        </div>
-        
-            <h4 id="about-card-name">mara silence</h4>
-        
-        
-        
-    </div>
+   	       
+	</article>
+	
+<nav class="article-nav clearfix">
+ 
+
+<div class="next">
+<a href="/2017/03/23/格式化字符串漏洞（二）漏洞利用/"  title="格式化字符串漏洞（二）漏洞利用">
+ <strong>下一篇：</strong><br/> 
+ <span>格式化字符串漏洞（二）漏洞利用
+</span>
+</a>
 </div>
-        <div id="cover" style="background-image:url('/assets/images/cover.png');"></div>
-    </body>
-    <!--SCRIPTS-->
-<script src="/assets/js/jquery.js"></script>
-<script src="/assets/js/jquery.fancybox.js"></script>
-<script src="/assets/js/jquery.fancybox-thumbs.js"></script>
-<script src="/assets/js/tranquilpeak.js"></script>
-<!--SCRIPTS END-->
+
+</nav>
+
+	
+
+</div>  
+      <div class="openaside"><a class="navbutton" href="#" title="Show Sidebar"></a></div>
+
+  <div id="toc" class="toc-aside">
+  <strong class="toc-title">Contents</strong>
+ 
+ <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#栈溢出原理与shellcode编写"><span class="toc-number">1.</span> <span class="toc-text">栈溢出原理与shellcode编写</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#0x01-栈溢出"><span class="toc-number">1.1.</span> <span class="toc-text">0x01 栈溢出</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#0x02-shellcode-编写"><span class="toc-number">1.2.</span> <span class="toc-text">0x02 shellcode 编写</span></a></li></ol></li></ol>
+ 
+  </div>
+
+<div id="asidepart">
+<div class="closeaside"><a class="closebutton" href="#" title="Hide Sidebar"></a></div>
+<aside class="clearfix">
+
+  
 
 
+  
+<div class="categorieslist">
+	<p class="asidetitle">Categories</p>
+		<ul>
+		
+		  
+			<li><a href="/categories/漏洞/" title="漏洞">漏洞<sup>3</sup></a></li>
+		  
+		
+		</ul>
+</div>
+
+
+  
+<div class="tagslist">
+	<p class="asidetitle">Tags</p>
+		<ul class="clearfix">
+		
+			
+				<li><a href="/tags/漏洞/" title="漏洞">漏洞<sup>3</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/格式化字符串/" title="格式化字符串">格式化字符串<sup>2</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/shellcode/" title="shellcode">shellcode<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/栈溢出/" title="栈溢出">栈溢出<sup>1</sup></a></li>
+			
+		
+		</ul>
+</div>
+
+
+  <div class="linkslist">
+  <p class="asidetitle">Links</p>
+    <ul>
+        
+          <li>
+            
+            	<a href="https://coderq.com" target="_blank" title="一个面向程序员交流分享的新一代社区">码农圈</a>
+            
+          </li>
+        
+          <li>
+            
+            	<a href="http://wuchong.me" target="_blank" title="Jark&#39;s Blog">Jark&#39;s Blog</a>
+            
+          </li>
+        
+    </ul>
+</div>
+
+  
+
+
+  <div class="rsspart">
+	<a href="/atom.xml" target="_blank" title="rss">RSS</a>
+</div>
+
+  <div class="weiboshow">
+  <p class="asidetitle">Weibo</p>
+    <iframe width="100%" height="119" class="share_self"  frameborder="0" scrolling="no" src="http://widget.weibo.com/weiboshow/index.php?language=&width=0&height=119&fansRow=2&ptype=1&speed=0&skin=9&isTitle=1&noborder=1&isWeibo=0&isFans=0&uid=null&verifier=b3593ceb&dpc=1"></iframe>
+</div>
+
+
+</aside>
+</div>
+    </div>
+    <footer><div id="footer" >
+	
+	<div class="line">
+		<span></span>
+		<div class="author"></div>
+	</div>
+	
+	
+	<section class="info">
+		<p> Hello ,I&#39;m Larry Page in Google. <br/>
+			This is my blog,believe it or not.</p>
+	</section>
+	 
+	<div class="social-font" class="clearfix">
+		
+		<a href="http://weibo.com/2176287895" target="_blank" class="icon-weibo" title="微博"></a>
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+	</div>
+			
+		
+
+		<p class="copyright">
+		Powered by <a href="http://hexo.io" target="_blank" title="hexo">hexo</a> and Theme by <a href="https://github.com/wuchong/jacman" target="_blank" title="Jacman">Jacman</a> © 2017 
+		
+		<a href="/about" target="_blank" title="mara silence">mara silence</a>
+		
+		
+		</p>
+</div>
+</footer>
+    <script src="/js/jquery-2.0.3.min.js"></script>
+<script src="/js/jquery.imagesloaded.min.js"></script>
+<script src="/js/gallery.js"></script>
+<script src="/js/jquery.qrcode-0.12.0.min.js"></script>
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  $('.navbar').click(function(){
+    $('header nav').toggleClass('shownav');
+  });
+  var myWidth = 0;
+  function getSize(){
+    if( typeof( window.innerWidth ) == 'number' ) {
+      myWidth = window.innerWidth;
+    } else if( document.documentElement && document.documentElement.clientWidth) {
+      myWidth = document.documentElement.clientWidth;
+    };
+  };
+  var m = $('#main'),
+      a = $('#asidepart'),
+      c = $('.closeaside'),
+      o = $('.openaside');
+  c.click(function(){
+    a.addClass('fadeOut').css('display', 'none');
+    o.css('display', 'block').addClass('fadeIn');
+    m.addClass('moveMain');
+  });
+  o.click(function(){
+    o.css('display', 'none').removeClass('beforeFadeIn');
+    a.css('display', 'block').removeClass('fadeOut').addClass('fadeIn');      
+    m.removeClass('moveMain');
+  });
+  $(window).scroll(function(){
+    o.css("top",Math.max(80,260-$(this).scrollTop()));
+  });
+  
+  $(window).resize(function(){
+    getSize(); 
+    if (myWidth >= 1024) {
+      $('header nav').removeClass('shownav');
+    }else{
+      m.removeClass('moveMain');
+      a.css('display', 'block').removeClass('fadeOut');
+      o.css('display', 'none');
+      
+      $('#toc.toc-aside').css('display', 'none');
+        
+    }
+  });
+});
+</script>
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  var ai = $('.article-content>iframe'),
+      ae = $('.article-content>embed'),
+      t  = $('#toc'),
+      ta = $('#toc.toc-aside'),
+      o  = $('.openaside'),
+      c  = $('.closeaside');
+  if(ai.length>0){
+    ai.wrap('<div class="video-container" />');
+  };
+  if(ae.length>0){
+   ae.wrap('<div class="video-container" />');
+  };
+  c.click(function(){
+    ta.css('display', 'block').addClass('fadeIn');
+  });
+  o.click(function(){
+    ta.css('display', 'none');
+  });
+  $(window).scroll(function(){
+    ta.css("top",Math.max(140,320-$(this).scrollTop()));
+  });
+});
+</script>
+
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  var $this = $('.share'),
+      url = $this.attr('data-url'),
+      encodedUrl = encodeURIComponent(url),
+      title = $this.attr('data-title'),
+      tsina = $this.attr('data-tsina'),
+      description = $this.attr('description');
+  var html = [
+  '<div class="hoverqrcode clearfix"></div>',
+  '<a class="overlay" id="qrcode"></a>',
+  '<a href="https://www.facebook.com/sharer.php?u=' + encodedUrl + '" class="article-share-facebook" target="_blank" title="Facebook"></a>',
+  '<a href="https://twitter.com/intent/tweet?url=' + encodedUrl + '" class="article-share-twitter" target="_blank" title="Twitter"></a>',
+  '<a href="#qrcode" class="article-share-qrcode" title="微信"></a>',
+  '<a href="http://widget.renren.com/dialog/share?resourceUrl=' + encodedUrl + '&srcUrl=' + encodedUrl + '&title=' + title +'" class="article-share-renren" target="_blank" title="人人"></a>',
+  '<a href="http://service.weibo.com/share/share.php?title='+title+'&url='+encodedUrl +'&ralateUid='+ tsina +'&searchPic=true&style=number' +'" class="article-share-weibo" target="_blank" title="微博"></a>',
+  '<span title="Share to"></span>'
+  ].join('');
+  $this.append(html);
+
+  $('.hoverqrcode').hide();
+
+  var myWidth = 0;
+  function updatehoverqrcode(){
+    if( typeof( window.innerWidth ) == 'number' ) {
+      myWidth = window.innerWidth;
+    } else if( document.documentElement && document.documentElement.clientWidth) {
+      myWidth = document.documentElement.clientWidth;
+    };
+    var qrsize = myWidth > 1024 ? 200:100;
+    var options = {render: 'image', size: qrsize, fill: '#2ca6cb', text: url, radius: 0.5, quiet: 1};
+    var p = $('.article-share-qrcode').position();
+    $('.hoverqrcode').empty().css('width', qrsize).css('height', qrsize)
+                          .css('left', p.left-qrsize/2+20).css('top', p.top-qrsize-10)
+                          .qrcode(options);
+  };
+  $(window).resize(function(){
+    $('.hoverqrcode').hide();
+  });
+  $('.article-share-qrcode').click(function(){
+    updatehoverqrcode();
+    $('.hoverqrcode').toggle();
+  });
+  $('.article-share-qrcode').hover(function(){}, function(){
+      $('.hoverqrcode').hide();
+  });
+});   
+</script>
+
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+$(document).ready(function(){ 
+  $('.article-content').each(function(i){
+    $(this).find('img').each(function(){
+      if ($(this).parent().hasClass('fancybox')) return;
+      var alt = this.alt;
+      if (alt) $(this).after('<span class="caption">' + alt + '</span>');
+      $(this).wrap('<a href="' + this.src + '" title="' + alt + '" class="fancybox"></a>');
+    });
+    $(this).find('.fancybox').each(function(){
+      $(this).attr('rel', 'article' + i);
+    });
+  });
+  if($.fancybox){
+    $('.fancybox').fancybox();
+  }
+}); 
+</script>
+
+
+
+<!-- Analytics Begin -->
+
+
+
+<script>
+var _hmt = _hmt || [];
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "//hm.baidu.com/hm.js?e6d1f421bbc9962127a50488f9ed37d1";
+  var s = document.getElementsByTagName("script")[0]; 
+  s.parentNode.insertBefore(hm, s);
+})();
+</script>
+
+
+
+<!-- Analytics End -->
+
+<!-- Totop Begin -->
+
+	<div id="totop">
+	<a title="Back to Top"><img src="/img/scrollup.png"/></a>
+	</div>
+	<script src="/js/totop.js"></script>
+
+<!-- Totop End -->
+
+<!-- MathJax Begin -->
+<!-- mathjax config similar to math.stackexchange -->
+
+
+<!-- MathJax End -->
+
+<!-- Tiny_search Begin -->
+
+<!-- Tiny_search End -->
+
+  </body>
 </html>
